@@ -1,0 +1,17 @@
+name = "usb_demo"
+description = ""
+version = "0.1.0-dev"
+
+authors = ["Your Name"]
+maintainers = ["Your Name <example@example.com>"]
+licenses = "MIT OR Apache-2.0 WITH LLVM-exception"
+website = ""
+tags = []
+
+executables = ["usb_demo"]
+
+[[depends-on]]
+stm32f0x0_hal = "*"
+
+[[pins]]
+stm32f0x0_hal = { path = "../"}

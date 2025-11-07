@@ -1,0 +1,108 @@
+with "config/stm32f0x0_hal_config.gpr";
+--- with "cortex_m0.gpr";
+
+project Stm32f0x0_Hal is
+
+   for Target use "arm-eabi";
+--    for Target use "arm-elf";
+--   for Runtime ("Ada") use "zfp-cortex-m0";
+   for Runtime ("Ada") use "light-cortex-m0";
+   for Languages use ("Ada");
+
+   for Library_Name use "stm32f0x0_hal";
+   for Library_Version use Project'Library_Name & ".so." & Stm32f0x0_Hal_Config.Crate_Version;
+
+   for Object_Dir use "obj/STM32";
+   for Create_Missing_Dirs use "True";
+   for Library_Dir use "lib";
+
+   type Library_Type_Type is ("relocatable", "static", "static-pic");
+   Library_Type : Library_Type_Type :=
+     external ("STM32F0X0_HAL_LIBRARY_TYPE", external ("LIBRARY_TYPE", "static"));
+   for Library_Kind use Library_Type;
+   for Languages use ("Ada", "Asm_Cpp");
+   Startup_Dirs := ("src/startup");
+
+   Linker_Switches := ("-T", Project'Project_dir & "/src/startup/link.ld",
+                              "-Wl,--print-memory-usage",
+                              "-Wl,--gc-sections");
+
+   --    when others => null;
+   -- end case;
+
+   for Source_Dirs use         
+       Startup_Dirs &          
+       ("src",                 
+        "src/drivers",         
+        "src/svd",             
+        "src/devices/STM32F0X0");
+
+   -- Compile_Checks_Switches := ();
+   -- case Compile_Checks is
+   --    when "enabled" =>
+   --       Compile_Checks_Switches :=
+   --         ("-gnatwa",  -- All warnings
+   --          "-gnatVa",  -- All validity checks
+   --          "-gnatwe"); -- Warnings as errors
+   --    when others => null;
+   -- end case;
+
+   -- Runtime_Checks_Switches := ();
+   -- case Runtime_Checks is
+   --    when "enabled" => null;
+   --    when others =>
+   --       Runtime_Checks_Switches :=
+   --         ("-gnatp"); -- Suppress checks
+   -- end case;
+
+   -- Style_Checks_Switches := ();
+   -- case Style_Checks is
+   --    when "enabled" =>
+   --       Style_Checks_Switches :=
+   --         ("-gnatyg",   -- GNAT Style checks
+   --          "-gnaty-d",  -- Disable no DOS line terminators
+   --          "-gnatyM80", -- Maximum line length
+   --          "-gnatyO");  -- Overriding subprograms explicitly marked as such
+   --    when others => null;
+   -- end case;
+
+   -- Contracts_Switches := ();
+   -- case Contracts_Checks is
+   --    when "enabled" =>
+   --       Contracts_Switches :=
+   --         ("-gnata"); --  Enable assertions and contracts
+   --    when others => null;
+   -- end case;
+
+   -- Build_Switches := ();
+   -- case Build_Mode is
+   --    when "optimize" =>
+   --       Build_Switches := ("-O3",     -- Optimization
+   --                          "-gnatn"); -- Enable inlining
+   --    when "debug" =>
+   --       Build_Switches := ("-g3",   -- Debug info
+   --                          "-O0"); -- No optimization
+   -- end case;
+
+   -- package Compiler is
+   --    for Default_Switches ("Ada") use
+   --      Compile_Checks_Switches &
+   --      Build_Switches &
+   --      Runtime_Checks_Switches &
+   --      Style_Checks_Switches &
+   --      Contracts_Switches &
+   --      ("-gnatw.X", -- Disable warnings for No_Exception_Propagation
+   --       "-gnatQ",   -- Don't quit. Generate ALI and tree files even if illegalities
+   --       "-ffunction-sections",
+   --       "-fdata-sections",
+   --       "-gnat2020");
+   -- end Compiler;
+
+   package Compiler is
+        for Default_Switches ("Ada") use Stm32f0x0_Hal_Config.Ada_Compiler_Switches & ("-gnatX");
+   end Compiler;
+
+   package Binder is
+      for Switches ("Ada") use ("-Es"); --  Symbolic traceback
+   end Binder;
+end Stm32f0x0_Hal;

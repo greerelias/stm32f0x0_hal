@@ -1,0 +1,56 @@
+project Startup is
+  package Device_Configuration is
+      for CPU_Name use "ARM Cortex-M0";
+      for Float_Handling use "soft";
+    
+      for Number_Of_Interrupts use "32";
+
+      for Interrupt("0") use "wwdg";
+      for Interrupt("1") use "pvd_vddio2";
+      for Interrupt("2") use "rtc";
+      for Interrupt("3") use "flash";
+      for Interrupt("4") use "rcc_crs";
+      for Interrupt("5") use "exti0_1";
+      for Interrupt("6") use "exti2_3";
+      for Interrupt("7") use "exti4_5";
+      for Interrupt("8") use "tsc";
+      for Interrupt("9") use "dma_ch1";
+      for Interrupt("10") use "dma_ch2_3";
+      for Interrupt("11") use "dma_ch4_5_6_7";
+      for Interrupt("12") use "adc_comp";
+      for Interrupt("13") use "tim1_brk_up";
+      for Interrupt("14") use "tim1_cc";
+      for Interrupt("15") use "tim2";
+      for Interrupt("16") use "tim3";
+      for Interrupt("17") use "tim6_dac";
+      for Interrupt("18") use "tim7";
+      for Interrupt("19") use "tim14";
+      for Interrupt("20") use "tim15";
+      for Interrupt("21") use "tim16";
+      for Interrupt("22") use "tim17";
+      for Interrupt("23") use "isc1";
+      for Interrupt("24") use "isc2";
+      for Interrupt("25") use "spi1";
+      for Interrupt("26") use "spi2";
+      for Interrupt("27") use "usart1";
+      for Interrupt("28") use "usart2";
+      for Interrupt("29") use "usart3_4_5_6_7_8";
+      for Interrupt("30") use "cec_can";
+      for Interrupt("31") use "usb";
+
+      for Memories use ("RAM", "FLASH");
+    
+      --  Specify from which memory bank the program will load
+      for Boot_Memory use "FLASH";
+    
+      --  Specification of the RAM
+      for Mem_Kind ("RAM") use "ram";
+      for Address ("RAM") use "0x20000000";
+      for Size ("RAM") use "0x4000"; -- 16K
+    
+      --  Specification of the FLASH
+      for Mem_Kind ("FLASH") use "rom";
+      for Address ("FLASH") use "0x08000000";
+      for Size ("FLASH") use "0x20000"; -- 128K
+   end Device_Configuration;
+end Startup;
