@@ -11,7 +11,7 @@ project Usb_Demo is
    for Main use ("usb_demo.adb");
 
    package Compiler is
-      for Default_Switches ("Ada") use Usb_Demo_Config.Ada_Compiler_Switches;
+      for Default_Switches ("Ada") use Usb_Demo_Config.Ada_Compiler_Switches & ("-gnat2022");
    end Compiler;
 
    package Binder is
