@@ -104,7 +104,7 @@ package body STM32.USB_Device is
       DP_Pin : constant GPIO_Point := PA12;
       use System.Storage_Elements;
    begin
-      Init_Serialtrace; -- DEBUG
+      --  Init_Serialtrace; -- DEBUG
 
       --  StartLog ("> Initialize");
 

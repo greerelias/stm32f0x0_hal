@@ -8,7 +8,7 @@ licenses = "MIT OR Apache-2.0 WITH LLVM-exception"
 website = ""
 tags = []
 
-executables = ["usb_demo"]
+executables = ["Main"]
 
 [[depends-on]]
 stm32f0x0_hal = "*"
