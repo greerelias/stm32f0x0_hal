@@ -10,8 +10,6 @@ with USB.Device; use USB.Device;
 with USB.Device.Serial;
 
 package body USB_Demo is
-   --  Declare USB components at the library level to ensure they are not
-   --  allocated on the stack.
    Serial :
      aliased USB.Device.Serial.Default_Serial_Class
                (TX_Buffer_Size => 128, RX_Buffer_Size => 128);
@@ -19,7 +17,6 @@ package body USB_Demo is
    UDC    : aliased STM32.USB_Device.UDC;
 
    procedure Run is
-      --  All USB components are now declared at the library level.
 
    begin
       Enable_Clock (SCS_HSE);
@@ -47,9 +44,10 @@ package body USB_Demo is
       end if;
 
       Stack.Start;
-
+      len : HAL.UInt32 := 4;
       loop
          Stack.Poll;
+         Serial.Write (UDC, "Test", len);
          STM32.GPIO.Set (STM32.Device.PA5);
          STM32.Device.Delay_Cycles (5000000);
          STM32.GPIO.Clear (STM32.Device.PA5);
