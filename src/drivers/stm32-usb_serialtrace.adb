@@ -28,8 +28,8 @@ with STM32_SVD.USB; use STM32_SVD.USB;
 
 package body STM32.USB_Serialtrace is
    Indent : Natural := 0;
-   TX_Pin : constant GPIO_Point := PB6;
-   RX_Pin : constant GPIO_Point := PB7;
+   TX_Pin : constant GPIO_Point := PA2;
+   RX_Pin : constant GPIO_Point := PA3;
 
    Log_Enabled : constant Boolean := True;
    Log_Level   : constant Integer := 3;
@@ -40,29 +40,29 @@ package body STM32.USB_Serialtrace is
          return;
       end if;
 
-      Enable_Clock (USART_1);
+      Enable_Clock (USART_2);
       Enable_Clock (RX_Pin & TX_Pin);
       Configure_IO
         (RX_Pin & TX_Pin,
          (Mode           => Mode_AF,
-          AF             => GPIO_B_AF_USART1_0,
-          Resistors      => Pull_Up,
+          AF             => 2#0001#,
+          Resistors      => Floating,
           AF_Speed       => Speed_50MHz,
           AF_Output_Type => Push_Pull));
 
-      Disable (USART_1);
+      Disable (USART_2);
 
-      Set_Oversampling_Mode (USART_1, Oversampling_By_16);
-      Set_Baud_Rate (USART_1, 115_200);
-      Set_Mode (USART_1, Tx_Rx_Mode);
-      Set_Stop_Bits (USART_1, Stopbits_1);
-      Set_Word_Length (USART_1, Word_Length_8);
-      Set_Parity (USART_1, No_Parity);
-      Set_Flow_Control (USART_1, No_Flow_Control);
+      Set_Oversampling_Mode (USART_2, Oversampling_By_16);
+      Set_Baud_Rate (USART_2, 115_200);
+      Set_Mode (USART_2, Tx_Rx_Mode);
+      Set_Stop_Bits (USART_2, Stopbits_1);
+      Set_Word_Length (USART_2, Word_Length_8);
+      Set_Parity (USART_2, No_Parity);
+      Set_Flow_Control (USART_2, No_Flow_Control);
 
-      Enable (USART_1);
-      --  Log ("START");
-      --  Log ("--");
+      Enable (USART_2);
+   --  Log ("START");
+   --  Log ("--");
    end Init_Serialtrace;
 
    procedure Await_Send_Ready (This : USART) is
@@ -85,21 +85,21 @@ package body STM32.USB_Serialtrace is
       end if;
 
       for I in 0 .. Indent loop
-         Put_Blocking (USART_1, Character'Pos ('|'));
-         Put_Blocking (USART_1, Character'Pos (' '));
+         Put_Blocking (USART_2, Character'Pos ('|'));
+         Put_Blocking (USART_2, Character'Pos (' '));
       end loop;
 
       if USB_Periph.ISTR.RESET then
-         Put_BLocking (USART_1, Character'Pos ('+'));
+         Put_BLocking (USART_2, Character'Pos ('+'));
       else
-         Put_BLocking (USART_1, Character'Pos (' '));
+         Put_BLocking (USART_2, Character'Pos (' '));
       end if;
 
       for C of S loop
-         Put_Blocking (USART_1, Character'Pos (C));
+         Put_Blocking (USART_2, Character'Pos (C));
       end loop;
-      Put_Blocking (USART_1, UInt16 (13)); -- CR
-      Put_Blocking (USART_1, UInt16 (10)); -- LF
+      Put_Blocking (USART_2, UInt16 (13)); -- CR
+      Put_Blocking (USART_2, UInt16 (10)); -- LF
 
       Indent := Indent + Deindent;
    end Log;

@@ -107,6 +107,7 @@ package body STM32.USB_Device is
       --  Init_Serialtrace; -- DEBUG
 
       --  StartLog ("> Initialize");
+      --  StartLog ("> Initialize");
 
       Enable_Clock (DM_Pin & DP_Pin);
 

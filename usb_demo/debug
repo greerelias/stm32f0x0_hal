@@ -1,0 +1,12 @@
+#!/bin/bash
+
+# This script runs OpenOCD to program, verify, and reset an STM32F0x target
+# using an ST-Link interface.
+
+echo "Starting OpenOCD to debug the STM32F070RB..."
+
+openocd -f interface/stlink.cfg \
+        -f target/stm32f0x.cfg \
+        -c "program bin/main"
+
+echo "Flashing process finished."

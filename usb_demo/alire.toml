@@ -10,6 +10,9 @@ tags = []
 
 executables = ["Main"]
 
+[build-switches]
+"*".style_checks = "No"
+
 [[depends-on]]
 stm32f0x0_hal = "*"
 

@@ -85,8 +85,8 @@ package body STM32.RCC is
 
    procedure Enable_PLL is
    begin
-      STM32_SVD.Flash.Flash_Periph.ACR.LATENCY :=
-        2#001#; -- FOR > 24mhz maybe change later
+      --  STM32_SVD.Flash.Flash_Periph.ACR.LATENCY :=
+      --    2#001#; -- FOR > 24mhz maybe change later
       -- Enable PLL
       RCC_Periph.CR.PLLON := True;
       -- Wait until it is ready

@@ -1,0 +1,27 @@
+{
+    "version": "1.0.0",
+    "configurations": [
+        {
+            "name": "Debug Ada (OpenOCD)",
+            "type": "cortex-debug",
+            "request": "launch",
+            "servertype": "openocd",
+            "gdbPath": "gdb-multiarch",
+            "executable": "./bin/usb_demo",
+            "configFiles": [
+                "interface/stlink.cfg",
+                "target/stm32f0x.cfg"
+            ],
+            "showDevDebugOutput": "raw",
+            "svdFile": "./bin/STM32F0x0.svd",
+            "runToEntryPoint": "Main",
+            "postRestartCommands": [
+                "continue"
+            ],
+            "liveWatch": {
+                "enabled": true,
+                "samplesPerSecond": 20 // Adjust as needed for refresh rate
+            }
+        }
+    ]
+}

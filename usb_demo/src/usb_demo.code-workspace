@@ -1,0 +1,30 @@
+{
+	"folders": [
+		{
+			"path": ".."
+		},
+		{
+			"name": "src",
+			"path": "../../src"
+		},
+		{
+			"name": "STM32F0X0",
+			"path": "../../src/devices/STM32F0X0"
+		},
+		{
+			"name": "drivers",
+			"path": "../../src/drivers"
+		},
+		{
+			"name": "startup",
+			"path": "../../src/startup"
+		},
+		{
+			"name": "svd",
+			"path": "../../src/svd"
+		}
+	],
+	"settings": {
+		"ada.projectFile": "usb_demo.gpr"
+	}
+}
