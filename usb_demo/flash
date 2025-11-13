@@ -1,7 +1,5 @@
 #!/bin/bash
 
-# This script runs OpenOCD to program, verify, and reset an STM32F0x target
-# using an ST-Link interface.
 
 echo "Starting OpenOCD to program the STM32F070RB..."
 

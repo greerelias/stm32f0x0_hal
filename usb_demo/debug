@@ -1,12 +1,12 @@
-#!/bin/bash
+# Set this to the GDB for your toolchain.
+# Common names: "arm-none-eabi-gdb", "gdb-multiarch"
+GDB_BIN="gdb-multiarch"
+# Path to the .elf file you want to debug
+ELF_FILE="./bin/main"
 
-# This script runs OpenOCD to program, verify, and reset an STM32F0x target
-# using an ST-Link interface.
-
-echo "Starting OpenOCD to debug the STM32F070RB..."
-
-openocd -f interface/stlink.cfg \
-        -f target/stm32f0x.cfg \
-        -c "program bin/main"
-
-echo "Flashing process finished."
+# 1. '-tui' starts GDB in the Text User Interface mode and keeps it interactive.
+# 2. Connect to OpenOCD's GDB server
+# 3. Reset the chip and halt it
+# 5. 'start' runs the code until the main procedure and stops there
+"$GDB_BIN" -tui "$ELF_FILE" \
+    -ex "target extended-remote :3333" \

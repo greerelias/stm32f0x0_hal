@@ -123,7 +123,8 @@ private
    type Endpoint_Status_Array is array (USB.EP_Id) of Endpoint_Status;
    type UDC is new USB_Device_Controller with record
 
-      Alloc : Standard.USB.Utils.Basic_RAM_Allocator (64 * 4);
+      Alloc : Standard.USB.Utils.Basic_RAM_Allocator (64 * 6);
+      -- Made buffer size larger due to possible bug in Align_Top
 
       --  4 x 16-bits per AP (ADDR_TX + COUNT_TX + ADDR_RX + COUNT_RX) = 64-bits
       --                                                                 (8 bytes)

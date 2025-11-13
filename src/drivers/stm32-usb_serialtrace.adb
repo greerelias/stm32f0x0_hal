@@ -45,6 +45,7 @@ package body STM32.USB_Serialtrace is
       Configure_IO
         (RX_Pin & TX_Pin,
          (Mode           => Mode_AF,
+          -- TODO: replace with proper constant, only works for pins 2&3
           AF             => 2#0001#,
           Resistors      => Floating,
           AF_Speed       => Speed_50MHz,
@@ -61,8 +62,8 @@ package body STM32.USB_Serialtrace is
       Set_Flow_Control (USART_2, No_Flow_Control);
 
       Enable (USART_2);
-   --  Log ("START");
-   --  Log ("--");
+      Log ("START");
+      Log ("--");
    end Init_Serialtrace;
 
    procedure Await_Send_Ready (This : USART) is
