@@ -1,0 +1,12 @@
+# Set this to the GDB for your toolchain.
+# Common names: "arm-none-eabi-gdb", "gdb-multiarch"
+GDB_BIN="gdb-multiarch"
+# Path to the .elf file you want to debug
+ELF_FILE="./bin/main"
+
+# 1. '-tui' starts GDB in the Text User Interface mode and keeps it interactive.
+# 2. Connect to OpenOCD's GDB server
+# 3. Reset the chip and halt it
+# 5. 'start' runs the code until the main procedure and stops there
+"$GDB_BIN" -tui "$ELF_FILE" \
+    -ex "target extended-remote :3333" \

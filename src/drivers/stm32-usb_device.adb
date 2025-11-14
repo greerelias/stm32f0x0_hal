@@ -106,7 +106,7 @@ package body STM32.USB_Device is
    begin
       Init_Serialtrace; -- DEBUG
 
-      --  StartLog ("> Initialize");
+      StartLog ("> Initialize");
 
       Enable_Clock (DM_Pin & DP_Pin);
 
@@ -158,7 +158,7 @@ package body STM32.USB_Device is
       --  Enable Pull Up for Full Speed
       USB_Periph.BCDR.DPPU := True;
 
-   --      EndLog ("< Initialize");
+      EndLog ("< Initialize");
    end Initialize;
 
    procedure Allocate_Endpoint_Buffer
@@ -171,8 +171,13 @@ package body STM32.USB_Device is
       Num_Blocks    : Natural := 0;
 
    begin
-      --      StartLog ("> Allocate_Endpoint_Buffer "
-      --                  & Ep.Num'Image & ", Dir " & Ep.Dir'Image & " Len: " & Len'Image);
+      StartLog
+        ("> Allocate_Endpoint_Buffer "
+         & Ep.Num'Image
+         & ", Dir "
+         & Ep.Dir'Image
+         & " Len: "
+         & Len'Image);
 
       if Ep.Num = 0 then
 
@@ -242,7 +247,7 @@ package body STM32.USB_Device is
             This.EP_Status (Ep.Num).Rx_Num_Blocks := Num_Blocks;
       end case;
 
-   --      EndLog ("< Allocate Endpoint Buffer");
+      EndLog ("< Allocate Endpoint Buffer");
    end Allocate_Endpoint_Buffer;
 
    --  Allocates 2 memory buffers:
@@ -258,8 +263,13 @@ package body STM32.USB_Device is
    is
       Mcu_Facing_Mem : System.Address;
    begin
-      --      StartLog ("> Request buffer "
-      --                & Ep.Num'Image & ", Dir " & Ep.Dir'Image & " Len: " & Len'Image);
+      StartLog
+        ("> Request buffer "
+         & Ep.Num'Image
+         & ", Dir "
+         & Ep.Dir'Image
+         & " Len: "
+         & Len'Image);
 
       --  Init hw & allocate in packet memory
       This.Allocate_Endpoint_Buffer (Ep, Len);
@@ -277,7 +287,7 @@ package body STM32.USB_Device is
             This.EP_Status (Ep.Num).Rx_User_Buffer_Len := Len;
       end case;
 
-      --      EndLog ("< Request buffer");
+      EndLog ("< Request buffer");
 
       return Mcu_Facing_Mem;
    end Request_Buffer;
@@ -285,7 +295,7 @@ package body STM32.USB_Device is
    overriding
    procedure Start (This : in out UDC) is
    begin
-      --      StartLog ("> Start");
+      StartLog ("> Start");
 
       USB_Periph.CNTR :=
         (USB_Periph.CNTR
@@ -305,14 +315,14 @@ package body STM32.USB_Device is
       --  Enable Pull Up for Full Speed
       USB_Periph.BCDR.DPPU := True;
 
-   --      EndLog ("< Start");
+      EndLog ("< Start");
    end Start;
 
    overriding
    procedure Reset (This : in out UDC) is
    begin
-      --      StartLog ("> Reset");
-      ----      Log ("Disabling RX/TX for all EP > 0 (1..8)");
+      StartLog ("> Reset");
+      Log ("Disabling RX/TX for all EP > 0 (1..8)");
 
       --  Reset ALL Endpoint except for 0 (control)
       --  EP 0 should be setup by controller when doing reset.
@@ -329,7 +339,7 @@ package body STM32.USB_Device is
          end;
       end loop;
 
-      --      Log ("Reseting allocator state");
+      Log ("Reseting allocator state");
       --  Deallocate all buffer except for Control
       --  HACK: should be done elsewhere. 64 bytes for Btable, 64 bytes for RX,
       --  64 bytes for TX.
@@ -337,7 +347,7 @@ package body STM32.USB_Device is
       This.Next_Buffer :=
         System.Storage_Elements.Storage_Offset (Num_Endpoints * 8 + 128);
 
-   --      EndLog ("< Reset");
+      EndLog ("< Reset");
    end Reset;
 
    procedure Clear_Ctr_Tx (Ep : EP_Id) is
@@ -448,9 +458,9 @@ package body STM32.USB_Device is
    begin
       if Cur_Istr.RESET then
          --  Clear RESET by writing 0. Writing 1 in other fields leave them unchanged.
-         Startlog ("## Reset");
-         --         Log ("!! Reset RECEIVED");
-         --         Log ("ISTR: " & Istr_Image (Cur_Istr));
+         StartLog ("## Reset");
+         Log ("!! Reset RECEIVED");
+         Log ("ISTR: " & Istr_Image (Cur_Istr));
 
          -- This.Reset_EP_Status;
 
@@ -458,7 +468,7 @@ package body STM32.USB_Device is
            (Neutral_Istr with delta RESET => False --  Clear
            );
 
-         --         EndLog("## return RESET to controller");
+         EndLog ("## return RESET to controller");
          --  This.Reset;
          return (Kind => USB.HAL.Device.Reset);
 
@@ -483,12 +493,12 @@ package body STM32.USB_Device is
             EP_Data_Size : UInt10;
          begin
             Startlog ("## CTR", 2);
-            --            Log ("Poll " & Istr_Image (Cur_Istr), 2);
-            --            Log ("EPR: " & EPR_Image (EPRS(EP_Id)), 2);
+            Log ("Poll " & Istr_Image (Cur_Istr), 2);
+            Log ("EPR: " & EPR_Image (EPRS (EP_Id)), 2);
 
             if EPRS (EP_Id).CTR_RX then
                if EPRS (EP_Id).SETUP then
-                  --                  Log ("EPR (clr): " & EPR_Image (EPRS(EP_Id)), 2);
+                  Log ("EPR (clr): " & EPR_Image (EPRS (EP_Id)), 2);
                   declare
                      Req : Setup_Data;
                   begin
@@ -496,8 +506,8 @@ package body STM32.USB_Device is
                        (Req'Address,
                         This.Endpoint_Buffer_Address ((EP_Id, EP_Out)),
                         Natural (Req'Size));
-                     --                     Log (" --> SETUP " & Setup_Data_Image (Req), 2, -1);
-                     ----                     Endlog("## return Setup_Request");
+                     Log (" --> SETUP " & Setup_Data_Image (Req), 2, -1);
+                     Endlog ("## return Setup_Request");
 
                      Clear_Ctr_Rx (EP_Id);  --  ACK the reception
 
@@ -515,8 +525,8 @@ package body STM32.USB_Device is
 
                   Clear_Ctr_Rx (EP_Id);  --  ACK the reception
 
-                  ----                  Log (" --> TRANSFER OUT/RX OK", 2);
-                  --                  Endlog("## return Transfer_Complete");
+                  Log (" --> TRANSFER OUT/RX OK", 2);
+                  Endlog ("## return Transfer_Complete");
                   return
                     (Kind => Transfer_Complete,
                      EP   => (EP_Id, EP_Out),
@@ -536,8 +546,8 @@ package body STM32.USB_Device is
             EP_Data_Size := Btable (Ep_Id).COUNT_TX.COUNTN_TX;
 
             Clear_Ctr_Tx (EP_Id);  -- ACK the transmission
-            --            Log (" --> TRANSFER IN/TX OK (" & EP_Data_Size'Image & ")");
-            --            Endlog ("## return Transfer_Complete");
+            Log (" --> TRANSFER IN/TX OK (" & EP_Data_Size'Image & ")");
+            Endlog ("## return Transfer_Complete");
             return
               (Kind => Transfer_Complete,
                EP   => (EP_Id, EP_In),
@@ -580,7 +590,7 @@ package body STM32.USB_Device is
       UPR : EPR_Register renames EPRS (Ep);
       Cur : constant EPR_Register := UPR;
    begin
-      --      StartLog ("> EP_Send_Packet " & Ep'Image, 3);
+      StartLog ("> EP_Send_Packet " & Ep'Image, 3);
 
       --  If VALID (3), there must be a pending write...
       --  Better panic than do garbage
@@ -599,7 +609,7 @@ package body STM32.USB_Device is
       UPR :=
         (Get_EPR_With_Invariant (Cur) with delta STAT_TX => Cur.STAT_TX xor 3);
 
-   --      EndLog ("< EP_Send_Packet", 3);
+      EndLog ("< EP_Send_Packet", 3);
    end EP_Send_Packet;
 
    function Get_EPR_With_Invariant (Current : EPR_Register) return EPR_Register
@@ -648,9 +658,13 @@ package body STM32.USB_Device is
       Tmp : EPR_Register;
 
    begin
-      --      StartLog ("> EP_Setup " & EP.Num'Image & ", "
-      --  & (if EP.Dir = EP_In then "IN" else "OUT")
-      --  & " Typ: " & EPM2(Typ));
+      StartLog
+        ("> EP_Setup "
+         & EP.Num'Image
+         & ", "
+         & (if EP.Dir = EP_In then "IN" else "OUT")
+         & " Typ: "
+         & EPM2 (Typ));
 
       if Ep.Num > Num_Endpoints then
          raise Program_Error with "Invalid endpoint number";
@@ -679,7 +693,7 @@ package body STM32.USB_Device is
       This.EP_Status (EP.Num).Typ := Typ;
       This.EP_Status (EP.Num).Valid := True;
 
-      --      Log("EPR      : " & EPR_Image(UPR));
+      Log ("EPR      : " & EPR_Image (UPR));
       Tmp :=
         (Get_EPR_With_Invariant (Cur)
          with delta
@@ -697,19 +711,26 @@ package body STM32.USB_Device is
            -- NAK RX/TX for corresponding Direction
            STAT_TX => (if EP.Dir = EP_In then Cur.STAT_TX xor 2 else 0),
            STAT_RX => (if EP.Dir = EP_Out then Cur.STAT_RX xor 2 else 0));
-      --      Log("Tmp      : " & EPR_Image(Tmp));
+      Log ("Tmp      : " & EPR_Image (Tmp));
       UPR := Tmp;
 
-   --      Log("EPR (set): " & EPR_Image(UPR));
+      Log ("EPR (set): " & EPR_Image (UPR));
 
-   --      Log("btable: addr_rx" & Btable(Ep.Num).ADDR_RX.ADDRN_RX'Image &
-   --  " count_rx: " & Btable(Ep.Num).COUNT_RX.COUNTN_RX'Image &
-   --  " bl: " & Btable(Ep.Num).COUNT_RX.BL_SIZE'Image &
-   --  " nb: " & Btable(Ep.Num).COUNT_RX.NUM_BLOCK'Image &
-   --  " addr_tx: " & Btable(Ep.Num).ADDR_TX.ADDRN_TX'Image &
-   --  " count_tx: " & Btable(Ep.Num).COUNT_TX.COUNTN_TX'Image);
+      Log
+        ("btable: addr_rx"
+         & Btable (Ep.Num).ADDR_RX.ADDRN_RX'Image
+         & " count_rx: "
+         & Btable (Ep.Num).COUNT_RX.COUNTN_RX'Image
+         & " bl: "
+         & Btable (Ep.Num).COUNT_RX.BL_SIZE'Image
+         & " nb: "
+         & Btable (Ep.Num).COUNT_RX.NUM_BLOCK'Image
+         & " addr_tx: "
+         & Btable (Ep.Num).ADDR_TX.ADDRN_TX'Image
+         & " count_tx: "
+         & Btable (Ep.Num).COUNT_TX.COUNTN_TX'Image);
 
-   --      EndLog ("< EP_Setup");
+      EndLog ("< EP_Setup");
    end EP_Setup;
 
    --  Set the endpoint in a state ready for EP_Out/RX transactions.
@@ -726,14 +747,20 @@ package body STM32.USB_Device is
       UPR : EPR_Register renames EPRS (Ep);
       Cur : constant EPR_Register := UPR;
    begin
-      --      StartLog ("> EP_Ready_For_Data " & EP'Image
-      --                  & " len: " & Size'Image & " ready: " & Ready'Image, 2);
+      StartLog
+        ("> EP_Ready_For_Data "
+         & EP'Image
+         & " len: "
+         & Size'Image
+         & " ready: "
+         & Ready'Image,
+         2);
 
-      --      Log ("EPR      : " & EPR_Image(UPR));
+      Log ("EPR      : " & EPR_Image (UPR));
 
       --  nothing ready, still waiting
       if Cur.STAT_RX = 3 then
-         --         EndLog ("< EP_Ready_For_Data (EP already ready to receive data)", 2);
+         EndLog ("< EP_Ready_For_Data (EP already ready to receive data)", 2);
          return;
       end if;
 
@@ -749,8 +776,8 @@ package body STM32.USB_Device is
             with delta STAT_RX => Cur.STAT_RX xor 2);
       end if;
 
-   --      Log ("EPR (set): " & EPR_Image(UPR));
-   --      EndLog ("< EP_Ready_For_Data", 2);
+      Log ("EPR (set): " & EPR_Image (UPR));
+      EndLog ("< EP_Ready_For_Data", 2);
    end EP_Ready_For_Data;
 
    overriding
@@ -784,17 +811,17 @@ package body STM32.USB_Device is
                   with delta DTOG_RX => False xor Cur.DTOG_RX);
             end if;
       end case;
-   --      EndLog ("< EP_Stall");
+      EndLog ("< EP_Stall");
    end EP_Stall;
 
    overriding
    procedure Set_Address (This : in out UDC; Addr : UInt7) is
    begin
-      --      StartLog ("> Set_Address " & Addr'Image);
+      StartLog ("> Set_Address " & Addr'Image);
 
       USB_Periph.DADDR.ADD := Addr;
       USB_Periph.DADDR.EF := True;
-   --      EndLog ("< Set_Address");
+      EndLog ("< Set_Address");
    end Set_Address;
 
    procedure Copy_Endpoint_Rx_Buffer (This : in out UDC; Num : USB.EP_Id) is
@@ -809,7 +836,7 @@ package body STM32.USB_Device is
         This.EP_Status (Num).Rx_User_Buffer_Address;
 
    begin
-      --      StartLog ("Copy_Endpoint_Rx_Buffer " & Num'Image);
+      StartLog ("Copy_Endpoint_Rx_Buffer " & Num'Image);
 
       if Length = 0 or else Target_Address = System.Null_Address then
          return;
@@ -817,7 +844,7 @@ package body STM32.USB_Device is
 
       HalfWord_Copy (Target_Address, Source_Address, Natural (Length));
 
-   --      EndLog ("< Copy_Endpoint_Rx_Buffer");
+      EndLog ("< Copy_Endpoint_Rx_Buffer");
    end Copy_Endpoint_Rx_Buffer;
 
    function Allocate_Buffer

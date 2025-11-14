@@ -6,7 +6,7 @@ package body STM32.Device is
 
    --  FIXME  ADL_Config.High_Speed_External_Clock;
    --  No board, so no ADL_Config
-   HSE_VALUE : constant := 0;
+   HSE_VALUE : constant := 8_000_000;
    --  External oscillator in Hz
 
    HSI_VALUE : constant := 8_000_000;
@@ -20,6 +20,12 @@ package body STM32.Device is
 
    PPRE_Presc_Table : constant array (UInt3) of UInt32 :=
      [1, 1, 1, 1, 2, 4, 8, 16];
+
+   Pllmul_Table : constant array (UInt4) of UInt32 :=
+     [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 16];
+
+   Prediv_Table : constant array (UInt4) of UInt32 :=
+     [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16];
 
    procedure Delay_Cycles (Cycles : UInt32) is
       use System.Machine_Code;
@@ -231,9 +237,9 @@ package body STM32.Device is
             declare
                Input_Source : constant Uint2 := RCC_Periph.CFGR.PLLSRC;
                Prediv       : constant UInt32 :=
-                 UInt32 (RCC_Periph.CFGR2.PREDIV);
+                 Prediv_Table (RCC_Periph.CFGR2.PREDIV);
                Pllmul       : constant UInt32 :=
-                 UInt32 (RCC_Periph.CFGR.PLLMUL);
+                 Pllmul_Table (RCC_Periph.CFGR.PLLMUL);
                Pllval       : UInt32 := HSI_VALUE;
             begin
                case Input_Source is
