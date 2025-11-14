@@ -13,6 +13,9 @@ executables = ["Main"]
 [build-switches]
 "*".style_checks = "No"
 
+[build-profiles]
+usb_embedded = "development"
+
 [[depends-on]]
 stm32f0x0_hal = "*"
 

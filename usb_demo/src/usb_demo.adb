@@ -63,11 +63,12 @@ package body USB_Demo is
       len : HAL.UInt32 := 4;
       loop
          Stack.Poll;
-         Serial.Write (UDC, "Test", len);
-         STM32.GPIO.Set (STM32.Device.PA5);
-         STM32.Device.Delay_Cycles (5000000);
-         STM32.GPIO.Clear (STM32.Device.PA5);
-         STM32.Device.Delay_Cycles (5000000);
+         --  Log ("Test", 4);
+         --  Serial.Write (UDC, "Test", len);
+         --  STM32.GPIO.Set (STM32.Device.PA5);
+         --  STM32.Device.Delay_Cycles (5000000);
+         --  STM32.GPIO.Clear (STM32.Device.PA5);
+         --  STM32.Device.Delay_Cycles (5000000);
          null;
       end loop;
    end Run;

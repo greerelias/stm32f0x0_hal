@@ -32,7 +32,7 @@ package body STM32.USB_Serialtrace is
    RX_Pin : constant GPIO_Point := PA3;
 
    Log_Enabled : constant Boolean := True;
-   Log_Level   : constant Integer := 3;
+   Log_Level   : constant Integer := 0;
 
    procedure Init_Serialtrace is
    begin
@@ -121,7 +121,9 @@ package body STM32.USB_Serialtrace is
          return;
       end if;
 
-      Indent := Indent - 1;
+      if Indent > 0 then
+         Indent := Indent - 1;
+      end if;
       Log (S, L);
    end EndLog;
 
