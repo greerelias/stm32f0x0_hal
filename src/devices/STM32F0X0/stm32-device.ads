@@ -275,7 +275,7 @@ package STM32.Device is
 private
 
    GPIO_A_AF_USART1_0 : constant GPIO_Alternate_Function := 0;
-   GPIO_A_AF_USART2_0 : constant GPIO_Alternate_Function := 2#0001#;
+   GPIO_A_AF_USART2_0 : constant GPIO_Alternate_Function := 1;
    GPIO_B_AF_USART1_0 : constant GPIO_Alternate_Function := 0;
    GPIO_C_AF_USART4_0 : constant GPIO_Alternate_Function := 0;
    GPIO_D_AF_USART2_0 : constant GPIO_Alternate_Function := 0;

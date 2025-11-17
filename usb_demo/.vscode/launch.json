@@ -13,7 +13,7 @@
                 "target/stm32f0x.cfg"
             ],
             "showDevDebugOutput": "raw",
-            "svdFile": "./bin/STM32F0x0.svd",
+            "svdFile": "./STM32F0x0.svd",
             "runToEntryPoint": "Main",
             "postRestartCommands": [
                 "continue"

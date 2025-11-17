@@ -146,14 +146,19 @@ package body STM32.USB_Device is
 
       --  Clear FRES. When set, RESET is forced and EP*R registers will be
       --  mostly forced to their reset state.
-      -- USB_Periph.CNTR := (USB_Periph.CNTR with delta
-      --                     FRES => False);
+      USB_Periph.CNTR := (USB_Periph.CNTR with delta FRES => False);
 
       --  Btable points to start of Packet Memory.
 
       --  First 64 bytes of PM are used for storing 4*16-bits * 8 EP descriptors
       --  (BTABLE)
       USB_Periph.BTABLE.BTABLE := 0;
+      -- Enable USB clock source => PLL
+      RCC_Periph.CFGR3.USBSW := True;
+      -- Confirm PLL is set
+      while not RCC_Periph.CFGR3.USBSW loop
+         null;
+      end loop;
 
       --  Enable Pull Up for Full Speed
       USB_Periph.BCDR.DPPU := True;
@@ -616,7 +621,7 @@ package body STM32.USB_Device is
    is
    begin
 
-      --  Invariant fields as described in the doc (RM0091 p883).
+      --  Invariant fields as described in the doc (RM0360 p695).
       --  When doing RMW, the recommended way is
       --  - load value from register
       --  - write 'invariant' values in fields that can only be modified by the
@@ -627,7 +632,9 @@ package body STM32.USB_Device is
       return
         (Current
          with delta
+           -- Invariant: Writing 1 has no effect
            CTR_RX  => True,
+           -- Invariant: Writing 0 has no effect
            DTOG_RX => False,
            STAT_RX => 0,
            CTR_TX  => True,
@@ -787,7 +794,7 @@ package body STM32.USB_Device is
       Cur : constant EPR_Register := UPR;
       V   : constant UInt2 := (if Set then 1 else 2);
    begin
-      --      StartLog ("> EP_Stall " & EP.Num'Image & " set: " & Set'Image);
+      StartLog ("> EP_Stall " & EP.Num'Image & " set: " & Set'Image);
 
       case Ep.Dir is
          when USB.EP_In  =>

@@ -15,6 +15,9 @@ executables = ["Main"]
 
 [build-profiles]
 usb_embedded = "development"
+stm32f0x0_hal = "development"
+
+
 
 [[depends-on]]
 stm32f0x0_hal = "*"

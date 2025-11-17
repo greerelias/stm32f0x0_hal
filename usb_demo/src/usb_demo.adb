@@ -3,7 +3,7 @@
 pragma Extensions_Allowed (On);
 with HAL.GPIO;
 with STM32.Device;
-with STM32.GPIO;
+with STM32.GPIO;            use STM32.GPIO;
 with STM32.RCC;             use STM32.RCC;
 with STM32.USB_Device;
 with STM32_SVD.Flash;
@@ -37,13 +37,24 @@ package body USB_Demo is
       Set_PLL_Divider (1);
       Set_PLL_Multiplier (6);
       Enable_Clock (SCS_PLL);
-      STM32.Device.Enable_Clock (STM32.Device.GPIO_A);
-      STM32.GPIO.Set_Mode (STM32.Device.PA5, HAL.GPIO.Output);
+      RCC_Periph.CFGR.PLLNODIV := True;
+      RCC_Periph.CFGR.MCOPRE := 2#000#;
+      RCC_Periph.CFGR.MCO := 2#0111#;
 
-      STM32_SVD.RCC.RCC_Periph.CFGR3.USBSW := True;
-      while not STM32_SVD.RCC.RCC_Periph.CFGR3.USBSW loop
+      while not RCC_Periph.CFGR.PLLNODIV loop
          null;
       end loop;
+      STM32.Device.Enable_Clock (STM32.Device.GPIO_A);
+
+      Configure_IO
+        (STM32.Device.PA8,
+         Config =>
+           (Mode           => Mode_AF,
+            Resistors      => Floating,
+            AF_Output_Type => Push_Pull,
+            AF_Speed       => Speed_High,
+            AF             => STM32.Device.GPIO_AF_MCO_0));
+
       if not Stack.Register_Class (Serial'Access) then
          raise Program_Error;
       end if;
@@ -63,6 +74,7 @@ package body USB_Demo is
       len : HAL.UInt32 := 4;
       loop
          Stack.Poll;
+         STM32.Device.Delay_Cycles (50000);
          --  Log ("Test", 4);
          --  Serial.Write (UDC, "Test", len);
          --  STM32.GPIO.Set (STM32.Device.PA5);

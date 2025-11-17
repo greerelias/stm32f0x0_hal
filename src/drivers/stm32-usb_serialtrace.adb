@@ -125,6 +125,7 @@ package body STM32.USB_Serialtrace is
          Indent := Indent - 1;
       end if;
       Log (S, L);
+      Log (" ", L);
    end EndLog;
 
 end STM32.USB_Serialtrace;

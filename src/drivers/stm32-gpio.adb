@@ -80,10 +80,10 @@ package body STM32.GPIO is
          when Mode_Out =>
             return HAL.GPIO.Output;
 
-         when Mode_In =>
+         when Mode_In  =>
             return HAL.GPIO.Input;
 
-         when others =>
+         when others   =>
             return HAL.GPIO.Unknown_Mode;
       end case;
    end Mode;
@@ -112,7 +112,7 @@ package body STM32.GPIO is
          when HAL.GPIO.Output =>
             This.Periph.MODER.Arr (Index) := Pin_IO_Modes'Enum_Rep (Mode_Out);
 
-         when HAL.GPIO.Input =>
+         when HAL.GPIO.Input  =>
             This.Periph.MODER.Arr (Index) := Pin_IO_Modes'Enum_Rep (Mode_In);
       end case;
    end Set_Mode;
@@ -147,10 +147,10 @@ package body STM32.GPIO is
       Index : constant GPIO_Pin_Index := GPIO_Pin'Pos (This.Pin);
    begin
       case Pull is
-         when HAL.GPIO.Floating =>
+         when HAL.GPIO.Floating  =>
             This.Periph.PUPDR.Arr (Index) := 0;
 
-         when HAL.GPIO.Pull_Up =>
+         when HAL.GPIO.Pull_Up   =>
             This.Periph.PUPDR.Arr (Index) := 1;
 
          when HAL.GPIO.Pull_Down =>
@@ -192,8 +192,8 @@ package body STM32.GPIO is
    procedure Set (This : in out GPIO_Point) is
    begin
       This.Periph.BSRR.BS.Val := GPIO_Pin'Enum_Rep (This.Pin);
-      --  The bit-set and bit-reset registers ignore writes of zeros so we
-      --  don't need to preserve the existing bit values in those registers.
+   --  The bit-set and bit-reset registers ignore writes of zeros so we
+   --  don't need to preserve the existing bit values in those registers.
    end Set;
 
    ---------
@@ -215,8 +215,8 @@ package body STM32.GPIO is
    procedure Clear (This : in out GPIO_Point) is
    begin
       This.Periph.BSRR.BR.Val := GPIO_Pin'Enum_Rep (This.Pin);
-      --  The bit-set and bit-reset registers ignore writes of zeros so we
-      --  don't need to preserve the existing bit values in those registers.
+   --  The bit-set and bit-reset registers ignore writes of zeros so we
+   --  don't need to preserve the existing bit values in those registers.
    end Clear;
 
    -----------
@@ -406,13 +406,13 @@ package body STM32.GPIO is
          when Mode_In | Mode_Analog =>
             null;
 
-         when Mode_Out =>
+         when Mode_Out              =>
             This.Periph.OTYPER.OT.Arr (Index) :=
               Config.Output_Type = Open_Drain;
             This.Periph.OSPEEDR.Arr (Index) :=
               Pin_Output_Speeds'Enum_Rep (Config.Speed);
 
-         when Mode_AF =>
+         when Mode_AF               =>
             This.Periph.OTYPER.OT.Arr (Index) :=
               Config.AF_Output_Type = Open_Drain;
             This.Periph.OSPEEDR.Arr (Index) :=
