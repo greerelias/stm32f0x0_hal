@@ -22,7 +22,7 @@ package body USB_Demo is
    procedure Run is
 
    begin
-      RCC_Periph.CFGR3.USART1SW := 16#01#;
+      -- Enable syscfg and power clock (not sure if needed)
       RCC_Periph.APB2ENR.SYSCFGEN := True;
       while not RCC_Periph.APB2ENR.SYSCFGEN loop
          null;
@@ -31,20 +31,28 @@ package body USB_Demo is
       while not RCC_Periph.APB1ENR.PWREN loop
          null;
       end loop;
+
+      -- Set flash latency to 1 wait state for sysclk > 24mhz
+      -- Should move this to RCC
       STM32_SVD.Flash.Flash_Periph.ACR.LATENCY := 2#001#;
       Enable_Clock (SCS_HSE);
       Set_PLL_Source (PLL_HSE);
       Set_PLL_Divider (1);
       Set_PLL_Multiplier (6);
       Enable_Clock (SCS_PLL);
+
+      -- Enable GPIOF clock (For external osc, not sure if needed)
+      STM32.Device.Enable_Clock (STM32.Device.GPIO_F);
+      -- Enable GPIOA clock
+      STM32.Device.Enable_Clock (STM32.Device.GPIO_A);
+
+      -- Setup MCO pin to check clock output
       RCC_Periph.CFGR.PLLNODIV := True;
       RCC_Periph.CFGR.MCOPRE := 2#000#;
       RCC_Periph.CFGR.MCO := 2#0111#;
-
       while not RCC_Periph.CFGR.PLLNODIV loop
          null;
       end loop;
-      STM32.Device.Enable_Clock (STM32.Device.GPIO_A);
 
       Configure_IO
         (STM32.Device.PA8,
@@ -55,6 +63,7 @@ package body USB_Demo is
             AF_Speed       => Speed_High,
             AF             => STM32.Device.GPIO_AF_MCO_0));
 
+      -- Setup USB stack
       if not Stack.Register_Class (Serial'Access) then
          raise Program_Error;
       end if;
@@ -75,7 +84,6 @@ package body USB_Demo is
       loop
          Stack.Poll;
          STM32.Device.Delay_Cycles (50000);
-         --  Log ("Test", 4);
          --  Serial.Write (UDC, "Test", len);
          --  STM32.GPIO.Set (STM32.Device.PA5);
          --  STM32.Device.Delay_Cycles (5000000);
