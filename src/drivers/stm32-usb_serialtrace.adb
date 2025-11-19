@@ -31,7 +31,7 @@ package body STM32.USB_Serialtrace is
    TX_Pin : constant GPIO_Point := PA2;
    RX_Pin : constant GPIO_Point := PA3;
 
-   Log_Enabled : constant Boolean := True;
+   Log_Enabled : constant Boolean := False;
    Log_Level   : constant Integer := 0;
 
    procedure Init_Serialtrace is

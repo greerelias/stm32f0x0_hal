@@ -108,6 +108,13 @@ package body STM32.USB_Device is
 
       StartLog ("> Initialize");
 
+      -- Enable USB clock source => PLL
+      RCC_Periph.CFGR3.USBSW := True;
+      -- Confirm PLL is set
+      while not RCC_Periph.CFGR3.USBSW loop
+         null;
+      end loop;
+
       Enable_Clock (DM_Pin & DP_Pin);
 
       Configure_IO (DM_Pin & DP_Pin, (Mode => Mode_In, Resistors => Floating));
@@ -153,12 +160,6 @@ package body STM32.USB_Device is
       --  First 64 bytes of PM are used for storing 4*16-bits * 8 EP descriptors
       --  (BTABLE)
       USB_Periph.BTABLE.BTABLE := 0;
-      -- Enable USB clock source => PLL
-      RCC_Periph.CFGR3.USBSW := True;
-      -- Confirm PLL is set
-      while not RCC_Periph.CFGR3.USBSW loop
-         null;
-      end loop;
 
       --  Enable Pull Up for Full Speed
       USB_Periph.BCDR.DPPU := True;

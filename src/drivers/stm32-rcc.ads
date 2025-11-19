@@ -21,6 +21,7 @@ package STM32.RCC is
    type PLL_Multipler is range 2 .. 16;
    type PLL_Divider is range 1 .. 16;
    HSI_Freq   : constant Positive := 8_000_000;
+   -- TODO: Remove all references to HSI48
    HSI48_Freq : constant Positive := 48_000_000;
    HSE_Freq   : constant Positive := 8_000_000;
 
