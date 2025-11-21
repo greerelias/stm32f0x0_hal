@@ -33,23 +33,23 @@ __vectors:
 	.word   SysTick_Handler          /* 15 Systick. */
 	/* MCU interrupts */
         .word __wwdg_handler /* 0 */
-        .word __pvd_vddio2_handler /* 1 */
+        .word 0
         .word __rtc_handler /* 2 */
         .word __flash_handler /* 3 */
-        .word __rcc_crs_handler /* 4 */
+        .word __rcc_handler /* 4 */
         .word __exti0_1_handler /* 5 */
         .word __exti2_3_handler /* 6 */
-        .word __exti4_5_handler /* 7 */
-        .word __tsc_handler /* 8 */
+        .word __exti4_15_handler /* 7 */
+        .word 0 /* 8 */
         .word __dma_ch1_handler /* 9 */
         .word __dma_ch2_3_handler /* 10 */
-        .word __dma_ch4_5_6_7_handler /* 11 */
+        .word __dma_ch4_5_handler /* 11 */
         .word __adc_comp_handler /* 12 */
         .word __tim1_brk_up_handler /* 13 */
         .word __tim1_cc_handler /* 14 */
-        .word __tim2_handler /* 15 */
+        .word 0 /* 15 */
         .word __tim3_handler /* 16 */
-        .word __tim6_dac_handler /* 17 */
+        .word __tim6_handler /* 17 */
         .word __tim7_handler /* 18 */
         .word __tim14_handler /* 19 */
         .word __tim15_handler /* 20 */
@@ -61,46 +61,40 @@ __vectors:
         .word __spi2_handler /* 26 */
         .word __usart1_handler /* 27 */
         .word __usart2_handler /* 28 */
-        .word __usart3_4_5_6_7_8_handler /* 29 */
-        .word __cec_can_handler /* 30 */
+        .word __usart3_4_handler /* 29 */
+        .word 0 /* 30 */
         .word __usb_handler /* 31 */
 
    .weak      __wwdg_handler
    .thumb_set __wwdg_handler,__common_int_handler
-   .weak      __pvd_vddio2_handler
-   .thumb_set __pvd_vddio2_handler,__common_int_handler
    .weak      __rtc_handler
    .thumb_set __rtc_handler,__common_int_handler
    .weak      __flash_handler
    .thumb_set __flash_handler,__common_int_handler
-   .weak      __rcc_crs_handler
-   .thumb_set __rcc_crs_handler,__common_int_handler
+   .weak      __rcc_handler
+   .thumb_set __rcc_handler,__common_int_handler
    .weak      __exti0_1_handler
    .thumb_set __exti0_1_handler,__common_int_handler
    .weak      __exti2_3_handler
    .thumb_set __exti2_3_handler,__common_int_handler
-   .weak      __exti4_5_handler
-   .thumb_set __exti4_5_handler,__common_int_handler
-   .weak      __tsc_handler
-   .thumb_set __tsc_handler,__common_int_handler
+   .weak      __exti4_15_handler
+   .thumb_set __exti4_15_handler,__common_int_handler
    .weak      __dma_ch1_handler
    .thumb_set __dma_ch1_handler,__common_int_handler
    .weak      __dma_ch2_3_handler
    .thumb_set __dma_ch2_3_handler,__common_int_handler
-   .weak      __dma_ch4_5_6_7_handler
-   .thumb_set __dma_ch4_5_6_7_handler,__common_int_handler
+   .weak      __dma_ch4_5_handler
+   .thumb_set __dma_ch4_5_handler,__common_int_handler
    .weak      __adc_comp_handler
    .thumb_set __adc_comp_handler,__common_int_handler
    .weak      __tim1_brk_up_handler
    .thumb_set __tim1_brk_up_handler,__common_int_handler
    .weak      __tim1_cc_handler
    .thumb_set __tim1_cc_handler,__common_int_handler
-   .weak      __tim2_handler
-   .thumb_set __tim2_handler,__common_int_handler
    .weak      __tim3_handler
    .thumb_set __tim3_handler,__common_int_handler
-   .weak      __tim6_dac_handler
-   .thumb_set __tim6_dac_handler,__common_int_handler
+   .weak      __tim6_handler
+   .thumb_set __tim6_handler,__common_int_handler
    .weak      __tim7_handler
    .thumb_set __tim7_handler,__common_int_handler
    .weak      __tim14_handler
@@ -123,10 +117,8 @@ __vectors:
    .thumb_set __usart1_handler,__common_int_handler
    .weak      __usart2_handler
    .thumb_set __usart2_handler,__common_int_handler
-   .weak      __usart3_4_5_6_7_8_handler
-   .thumb_set __usart3_4_5_6_7_8_handler,__common_int_handler
-   .weak      __cec_can_handler
-   .thumb_set __cec_can_handler,__common_int_handler
+   .weak      __usart3_4_handler
+   .thumb_set __usart3_4_handler,__common_int_handler
    .weak      __usb_handler
    .thumb_set __usb_handler,__common_int_handler
 

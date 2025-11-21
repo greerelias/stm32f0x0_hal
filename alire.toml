@@ -10,11 +10,14 @@ website = ""
 [[depends-on]]
 cortex_m = "~0.5"
 hal = "~0.3"
-usb_embedded = "~0.3"
+usb_embedded = "*"
 gnat_arm_elf = ">=12"
 
+[[pins]]
+usb_embedded = { path = "./usb_embedded/"}
 [build-switches]
 "*".style_checks = "No"
+
 
 [configuration.variables]
 Use_Startup = {type = "Boolean", default = true}

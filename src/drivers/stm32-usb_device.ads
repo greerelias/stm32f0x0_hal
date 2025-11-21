@@ -25,7 +25,9 @@ with System.Storage_Elements;
 with System;
 with USB;            use USB;
 with USB.HAL.Device; use USB.HAL.Device;
+with USB.Device;     use USB.Device;
 with USB.Utils;
+
 
 package STM32.USB_Device is
 
@@ -79,6 +81,11 @@ package STM32.USB_Device is
    is (False);
 
    function Send_Would_Block (This : UDC; Ep : EP_Id) return Boolean;
+
+   function Irq_Pending (This : UDC) return Boolean;
+
+   procedure USB_ISR_Handler (This : in out UDC)
+   with Export, Convention => C, External_Name => "__usb_handler";
 private
    Packet_Buffer_Base : constant System.Address :=
      System'To_Address (16#4000_6000#);
@@ -135,5 +142,6 @@ private
         System.Storage_Elements.Storage_Offset (Num_Endpoints * 8 + 128);
       EP_Status   : Endpoint_Status_Array := [others => <>];
       In_Reset    : Boolean := True;
+      Irq         : Boolean := False;
    end record;
 end STM32.USB_Device;

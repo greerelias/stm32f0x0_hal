@@ -20,7 +20,8 @@ package body USB_Demo is
    UDC    : aliased STM32.USB_Device.UDC;
 
    procedure Run is
-
+      Buffer : String (1 .. Usb_Buffer_Size);
+      Length : UInt32;
    begin
       -- Enable syscfg and power clock (not sure if needed)
       RCC_Periph.APB2ENR.SYSCFGEN := True;
@@ -53,6 +54,13 @@ package body USB_Demo is
       while not RCC_Periph.CFGR.PLLNODIV loop
          null;
       end loop;
+      Configure_IO
+        (STM32.Device.PA5,
+         Config =>
+           (Mode        => Mode_Out,
+            Resistors   => Floating,
+            Output_Type => Push_Pull,
+            Speed       => Speed_High));
 
       Configure_IO
         (STM32.Device.PA8,
@@ -83,13 +91,13 @@ package body USB_Demo is
       len : HAL.UInt32 := 4;
       loop
          Stack.Poll;
-         STM32.Device.Delay_Cycles (50000);
-         Serial.Write (UDC, "Test", len);
-         --  STM32.GPIO.Set (STM32.Device.PA5);
-         --  STM32.Device.Delay_Cycles (5000000);
-         --  STM32.GPIO.Clear (STM32.Device.PA5);
-         --  STM32.Device.Delay_Cycles (5000000);
-         null;
+         --  STM32.Device.Delay_Cycles (10000);
+         if Serial.List_Ctrl_State.DTE_Is_Present then
+            Serial.Read (Buffer, Length);
+            Stack.Poll;
+            Serial.Write (UDC, Buffer (1 .. Integer (Length)), Length);
+         end if;
+         STM32.GPIO.Set (STM32.Device.PA5);
       end loop;
    end Run;
 end Usb_Demo;

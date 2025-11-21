@@ -7,7 +7,7 @@
             "request": "launch",
             "servertype": "openocd",
             "gdbPath": "gdb-multiarch",
-            "executable": "./bin/usb_demo",
+            "executable": "./bin/main",
             "configFiles": [
                 "interface/stlink.cfg",
                 "target/stm32f0x.cfg"

@@ -28,6 +28,7 @@ with STM32_SVD.RCC; use STM32_SVD.RCC;
 with STM32.GPIO;            use STM32.GPIO;
 with STM32.USB_Btable;      use STM32.USB_Btable;
 with STM32.USB_Serialtrace; use STM32.USB_Serialtrace;
+with Cortex_M.NVIC;         use Cortex_M.NVIC;
 
 package body STM32.USB_Device is
 
@@ -462,6 +463,7 @@ package body STM32.USB_Device is
       Istr         : ISTR_Register renames USB_Periph.ISTR;
       Cur_Istr     : constant ISTR_Register := Istr;
    begin
+      This.Irq := False;
       if Cur_Istr.RESET then
          --  Clear RESET by writing 0. Writing 1 in other fields leave them unchanged.
          StartLog ("## Reset");
@@ -871,5 +873,17 @@ package body STM32.USB_Device is
         This.Next_Buffer + Storage_Offset (Extra) + Storage_Offset (Size);
       return Addr;
    end Allocate_Buffer;
+
+   function Irq_Pending (This : UDC) return Boolean is
+   begin
+      return This.Irq;
+   end Irq_Pending;
+
+   procedure USB_ISR_Handler (This : in out UDC) is
+   begin
+      This.Irq := True;
+   --  Clear_Pending (31);
+   end USB_ISR_Handler;
+
 
 end STM32.USB_Device;
