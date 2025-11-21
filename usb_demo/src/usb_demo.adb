@@ -20,8 +20,6 @@ package body USB_Demo is
    UDC    : aliased STM32.USB_Device.UDC;
 
    procedure Run is
-      Buffer : String (1 .. Usb_Buffer_Size);
-      Length : UInt32;
    begin
       -- Enable syscfg and power clock (not sure if needed)
       RCC_Periph.APB2ENR.SYSCFGEN := True;

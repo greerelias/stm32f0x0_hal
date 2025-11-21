@@ -20,7 +20,7 @@
             ],
             "liveWatch": {
                 "enabled": true,
-                "samplesPerSecond": 20 // Adjust as needed for refresh rate
+                "samplesPerSecond": 4 // Adjust as needed for refresh rate
             }
         }
     ]
