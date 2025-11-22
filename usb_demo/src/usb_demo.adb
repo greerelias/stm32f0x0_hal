@@ -21,6 +21,7 @@ package body USB_Demo is
 
    procedure Run is
    begin
+
       -- Enable syscfg and power clock (not sure if needed)
       RCC_Periph.APB2ENR.SYSCFGEN := True;
       while not RCC_Periph.APB2ENR.SYSCFGEN loop
@@ -86,14 +87,28 @@ package body USB_Demo is
 
       Stack.Start;
 
-      len : HAL.UInt32 := 4;
       loop
          Stack.Poll;
-         --  STM32.Device.Delay_Cycles (10000);
+         STM32.GPIO.Clear (STM32.Device.PA5);
          if Serial.List_Ctrl_State.DTE_Is_Present then
-            Serial.Read (Buffer, Length);
-            Stack.Poll;
-            Serial.Write (UDC, Buffer (1 .. Integer (Length)), Length);
+            -- Reads characters from host serial port.
+            -- GTKTerm sends a character as soon as it is typed so this reads one
+            -- character at time.
+            Serial.Read (Buffer (Integer (Count) .. 128), Length);
+            if Length > 0 then
+               if Buffer (Integer (Count)) = CR then
+                  -- If enter is pressed print buffer to host
+                  Serial.Write (UDC, Reply, Reply_Len);
+                  Serial.Write (UDC, Buffer (1 .. Integer (Count)), Count);
+                  Serial.Write (UDC, New_Line, NL_Len);
+                  Count := 1;
+               else
+                  -- Echo characters typed back to host
+                  Serial.Write
+                    (UDC, Buffer (Integer (Count) .. Integer (Count)), Length);
+                  Count := Count + 1;
+               end if;
+            end if;
          end if;
          STM32.GPIO.Set (STM32.Device.PA5);
       end loop;
