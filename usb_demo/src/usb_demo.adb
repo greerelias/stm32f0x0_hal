@@ -13,12 +13,12 @@ with USB.Device.Serial;
 with STM32.USB_Serialtrace; use STM32.USB_Serialtrace;
 
 package body USB_Demo is
-   Serial :
+   Serial        :
      aliased USB.Device.Serial.Default_Serial_Class
                (TX_Buffer_Size => 128, RX_Buffer_Size => 128);
-   Stack  : aliased USB.Device.USB_Device_Stack (Max_Classes => 1);
-   UDC    : aliased STM32.USB_Device.UDC;
-
+   Stack         : aliased USB.Device.USB_Device_Stack (Max_Classes => 1);
+   UDC           : aliased STM32.USB_Device.UDC;
+   DTE_Connected : Boolean := False;
    procedure Run is
    begin
 
@@ -91,16 +91,25 @@ package body USB_Demo is
          Stack.Poll;
          STM32.GPIO.Clear (STM32.Device.PA5);
          if Serial.List_Ctrl_State.DTE_Is_Present then
+            if not DTE_Connected then
+               STM32.Device.Delay_Cycles (1000);
+               -- Seems like we have to do a read before writing
+               Serial.Read (Buffer (Integer (Count) .. 128), Length);
+               Stack.Poll;
+               Serial.Write (UDC, Greeting, Length);
+               DTE_Connected := True;
+            end if;
             -- Reads characters from host serial port.
             -- GTKTerm sends a character as soon as it is typed so this reads one
             -- character at time.
             Serial.Read (Buffer (Integer (Count) .. 128), Length);
             if Length > 0 then
+               -- Length = bytes read
                if Buffer (Integer (Count)) = CR then
                   -- If enter is pressed print buffer to host
-                  Serial.Write (UDC, Reply, Reply_Len);
-                  Serial.Write (UDC, Buffer (1 .. Integer (Count)), Count);
-                  Serial.Write (UDC, New_Line, NL_Len);
+                  Serial.Write (UDC, Reply, Length);
+                  Serial.Write (UDC, Buffer (1 .. Integer (Count)), Length);
+                  Serial.Write (UDC, New_Line, Length);
                   Count := 1;
                else
                   -- Echo characters typed back to host
@@ -110,6 +119,7 @@ package body USB_Demo is
                end if;
             end if;
          end if;
+         -- Led does not turn back on if device crashes
          STM32.GPIO.Set (STM32.Device.PA5);
       end loop;
    end Run;
