@@ -97,14 +97,14 @@ package body USB_Demo is
          Stack.Poll;
          STM32.GPIO.Clear (STM32.Device.PA5);
          if Serial.List_Ctrl_State.DTE_Is_Present then
+            Length := Buffer'Length;
             Serial.Read (Buffer'Address, Length);
             Stack.Poll;
             if Length > 0 then
                -- Length = bytes read
-
                declare
                   Decoded_Packet : constant UInt8_Array :=
-                    Protocol.Decode (Buffer (1 .. Integer (Length)));
+                    Protocol.Decode (Buffer (1 .. Integer (Length - 1)));
                begin
                   if Decoded_Packet'Length <= Packet'Length then
                      Packet (1 .. Decoded_Packet'Length) := Decoded_Packet;
@@ -115,14 +115,18 @@ package body USB_Demo is
                         declare
                            Encoded   : constant UInt8_Array :=
                              Encode (Decoded_Packet);
-                           Write_Len : UInt32 := UInt32 (Encoded'Length);
+                           Write_Len : UInt32 := UInt32 (Encoded'Length) + 1;
                         begin
                            Reply (1 .. Encoded'Length) := Encoded;
-                           Serial.Write (UDC, Reply (1)'Address, Write_Len);
+                           Serial.Read (Buffer'Address, Length);
+                           Stack.Poll;
+                           Serial.Write (UDC, Reply'Address, Write_Len);
                         end;
                      end if;
                   end if;
                end;
+
+               null;
             end if;
          end if;
          -- Led does not turn back on if device crashes
