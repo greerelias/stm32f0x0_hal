@@ -11,6 +11,9 @@ with STM32_SVD.RCC;         use STM32_SVD.RCC;
 with USB.Device;            use USB.Device;
 with USB.Device.Serial;
 with STM32.USB_Serialtrace; use STM32.USB_Serialtrace;
+with Packet_Formatting;     use Packet_Formatting;
+with Protocol;              use Protocol;
+with Commands;
 
 package body USB_Demo is
    Serial        :
@@ -91,31 +94,16 @@ package body USB_Demo is
          Stack.Poll;
          STM32.GPIO.Clear (STM32.Device.PA5);
          if Serial.List_Ctrl_State.DTE_Is_Present then
-            if not DTE_Connected then
-               STM32.Device.Delay_Cycles (1000);
-               -- Seems like we have to do a read before writing
-               Serial.Read (Buffer (Integer (Count) .. 128), Length);
-               Stack.Poll;
-               Serial.Write (UDC, Greeting, Length);
-               DTE_Connected := True;
-            end if;
-            -- Reads characters from host serial port.
-            -- GTKTerm sends a character as soon as it is typed so this reads one
-            -- character at time.
-            Serial.Read (Buffer (Integer (Count) .. 128), Length);
+            Serial.Read (Buffer'Address (1 .. 128), Length);
+            Stack.Poll;
             if Length > 0 then
                -- Length = bytes read
-               if Buffer (Integer (Count)) = CR then
-                  -- If enter is pressed print buffer to host
-                  Serial.Write (UDC, Reply, Length);
-                  Serial.Write (UDC, Buffer (1 .. Integer (Count)), Length);
-                  Serial.Write (UDC, New_Line, Length);
-                  Count := 1;
-               else
-                  -- Echo characters typed back to host
-                  Serial.Write
-                    (UDC, Buffer (Integer (Count) .. Integer (Count)), Length);
-                  Count := Count + 1;
+               Packet := Protocol.Decode (Buffer (1 .. Length));
+               if Protocol.Is_Valid (Packet) then
+                  if Get_Command (Packet) = Commands.Get_Info then
+                     Reply := Protocol.Encode (Packet);
+                     Serial.Write (UDC, Reply (Length + 1), Length);
+                  end if;
                end if;
             end if;
          end if;
