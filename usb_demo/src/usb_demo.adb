@@ -1,19 +1,22 @@
 --  with USB.Device.Serial; use USB.Device.Serial;
 --  with STM32.USB_Device;  use STM32.USB_Device;
 pragma Extensions_Allowed (On);
+with HAL;                     use HAL;
 with HAL.GPIO;
 with STM32.Device;
-with STM32.GPIO;            use STM32.GPIO;
-with STM32.RCC;             use STM32.RCC;
+with STM32.GPIO;              use STM32.GPIO;
+with STM32.RCC;               use STM32.RCC;
 with STM32.USB_Device;
 with STM32_SVD.Flash;
-with STM32_SVD.RCC;         use STM32_SVD.RCC;
-with USB.Device;            use USB.Device;
+with STM32_SVD.RCC;           use STM32_SVD.RCC;
+with USB.Device;              use USB.Device;
 with USB.Device.Serial;
-with STM32.USB_Serialtrace; use STM32.USB_Serialtrace;
-with Packet_Formatting;     use Packet_Formatting;
-with Protocol;              use Protocol;
+with STM32.USB_Serialtrace;   use STM32.USB_Serialtrace;
+with Packet_Formatting;       use Packet_Formatting;
+with Protocol;                use Protocol;
 with Commands;
+with System;                  use System;
+with System.Storage_Elements; use System.Storage_Elements;
 
 package body USB_Demo is
    Serial        :
@@ -94,17 +97,32 @@ package body USB_Demo is
          Stack.Poll;
          STM32.GPIO.Clear (STM32.Device.PA5);
          if Serial.List_Ctrl_State.DTE_Is_Present then
-            Serial.Read (Buffer'Address (1 .. 128), Length);
+            Serial.Read (Buffer'Address, Length);
             Stack.Poll;
             if Length > 0 then
                -- Length = bytes read
-               Packet := Protocol.Decode (Buffer (1 .. Length));
-               if Protocol.Is_Valid (Packet) then
-                  if Get_Command (Packet) = Commands.Get_Info then
-                     Reply := Protocol.Encode (Packet);
-                     Serial.Write (UDC, Reply (Length + 1), Length);
+
+               declare
+                  Decoded_Packet : constant UInt8_Array :=
+                    Protocol.Decode (Buffer (1 .. Integer (Length)));
+               begin
+                  if Decoded_Packet'Length <= Packet'Length then
+                     Packet (1 .. Decoded_Packet'Length) := Decoded_Packet;
                   end if;
-               end if;
+
+                  if Is_Valid (Decoded_Packet) then
+                     if Get_Command (Decoded_Packet) = Commands.Get_Info then
+                        declare
+                           Encoded   : constant UInt8_Array :=
+                             Encode (Decoded_Packet);
+                           Write_Len : UInt32 := UInt32 (Encoded'Length);
+                        begin
+                           Reply (1 .. Encoded'Length) := Encoded;
+                           Serial.Write (UDC, Reply (1)'Address, Write_Len);
+                        end;
+                     end if;
+                  end if;
+               end;
             end if;
          end if;
          -- Led does not turn back on if device crashes
