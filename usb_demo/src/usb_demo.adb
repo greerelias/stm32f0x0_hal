@@ -114,10 +114,11 @@ package body USB_Demo is
                      if Get_Command (Decoded_Packet) = Commands.Get_Info then
                         declare
                            Encoded   : constant UInt8_Array :=
-                             Encode (Decoded_Packet);
+                             Encode (Device_Info);
                            Write_Len : UInt32 := UInt32 (Encoded'Length) + 1;
                         begin
                            Reply (1 .. Encoded'Length) := Encoded;
+                           Reply (Encoded'Length + 1) := 0;
                            Serial.Read (Buffer'Address, Length);
                            Stack.Poll;
                            Serial.Write (UDC, Reply'Address, Write_Len);

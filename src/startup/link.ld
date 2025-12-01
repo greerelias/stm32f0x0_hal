@@ -6,7 +6,7 @@
 SEARCH_DIR(.)
 __DYNAMIC  =  0;
 
-_DEFAULT_STACK_SIZE = 0x1000;
+_DEFAULT_STACK_SIZE = 0x2000;
 
 ENTRY(Reset_Handler);
 

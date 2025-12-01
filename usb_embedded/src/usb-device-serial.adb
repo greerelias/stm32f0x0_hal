@@ -29,7 +29,7 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with System; use System;
+with System;                  use System;
 with System.Storage_Elements; use System.Storage_Elements;
 
 with BBqueue;         use BBqueue;
@@ -45,21 +45,21 @@ package body USB.Device.Serial is
 
    type Class_Request_Type is
      (Set_Line_Coding, Get_Line_Coding, Set_Control_Line_State, Send_Break);
-   for Class_Request_Type use (Set_Line_Coding        => 16#20#,
-                               Get_Line_Coding        => 16#21#,
-                               Set_Control_Line_State => 16#22#,
-                               Send_Break             => 16#23#);
+   for Class_Request_Type use
+     (Set_Line_Coding        => 16#20#,
+      Get_Line_Coding        => 16#21#,
+      Set_Control_Line_State => 16#22#,
+      Send_Break             => 16#23#);
 
    ----------------
    -- Initialize --
    ----------------
 
    overriding
-   function Initialize (This                 : in out Default_Serial_Class;
-                        Dev                  : in out USB_Device_Stack'Class;
-                        Base_Interface_Index :        Interface_Id)
-                        return Init_Result
-   is
+   function Initialize
+     (This                 : in out Default_Serial_Class;
+      Dev                  : in out USB_Device_Stack'Class;
+      Base_Interface_Index : Interface_Id) return Init_Result is
    begin
 
       USB.Logging.Device.Log_Serial_Init;
@@ -70,8 +70,8 @@ package body USB.Device.Serial is
          return Not_Enough_EPs;
       end if;
 
-      This.Int_Buf := Dev.Request_Buffer ((This.Int_EP, EP_In),
-                                          Irq_Buffer_Size);
+      This.Int_Buf :=
+        Dev.Request_Buffer ((This.Int_EP, EP_In), Irq_Buffer_Size);
       if This.Int_Buf = System.Null_Address then
          return Not_Enough_EP_Buffer;
       end if;
@@ -82,14 +82,14 @@ package body USB.Device.Serial is
          return Not_Enough_EPs;
       end if;
 
-      This.Bulk_Out_Buf := Dev.Request_Buffer ((This.Bulk_EP, EP_Out),
-                                               Bulk_Buffer_Size);
+      This.Bulk_Out_Buf :=
+        Dev.Request_Buffer ((This.Bulk_EP, EP_Out), Bulk_Buffer_Size);
       if This.Bulk_Out_Buf = System.Null_Address then
          return Not_Enough_EP_Buffer;
       end if;
 
-      This.Bulk_In_Buf := Dev.Request_Buffer ((This.Bulk_EP, EP_In),
-                                              Bulk_Buffer_Size);
+      This.Bulk_In_Buf :=
+        Dev.Request_Buffer ((This.Bulk_EP, EP_In), Bulk_Buffer_Size);
       if This.Bulk_In_Buf = System.Null_Address then
          return Not_Enough_EP_Buffer;
       end if;
@@ -100,7 +100,7 @@ package body USB.Device.Serial is
 
       --  Default line coding
       This.Coding.Bitrate := 115_200;
-      This.Coding.Stop_Bit := 0;
+      This.Coding.Stop_Bit := 1;
       This.Coding.Parity := 0;
       This.Coding.Data_Bits := 8;
 
@@ -114,8 +114,8 @@ package body USB.Device.Serial is
    overriding
    procedure Get_Class_Info
      (This                     : in out Default_Serial_Class;
-      Number_Of_Interfaces     :    out Interface_Id;
-      Config_Descriptor_Length :    out Natural)
+      Number_Of_Interfaces     : out Interface_Id;
+      Config_Descriptor_Length : out Natural)
    is
       pragma Unreferenced (This);
    begin
@@ -128,18 +128,18 @@ package body USB.Device.Serial is
    ----------------------------
 
    overriding
-   procedure Fill_Config_Descriptor (This : in out Default_Serial_Class;
-                                     Data :    out UInt8_Array)
+   procedure Fill_Config_Descriptor
+     (This : in out Default_Serial_Class; Data : out UInt8_Array)
    is
       F : constant Natural := Data'First;
 
-      USB_CLASS_CDC : constant := 2;
-      USB_CLASS_CDC_DATA : constant := 10;
-      CDC_COMM_SUBCLASS_ABSTRACT_CONTROL_MODEL : constant := 2;
-      CDC_FUNC_DESC_HEADER : constant := 0;
-      CDC_FUNC_DESC_CALL_MANAGEMENT : constant := 1;
+      USB_CLASS_CDC                             : constant := 2;
+      USB_CLASS_CDC_DATA                        : constant := 10;
+      CDC_COMM_SUBCLASS_ABSTRACT_CONTROL_MODEL  : constant := 2;
+      CDC_FUNC_DESC_HEADER                      : constant := 0;
+      CDC_FUNC_DESC_CALL_MANAGEMENT             : constant := 1;
       CDC_FUNC_DESC_ABSTRACT_CONTROL_MANAGEMENT : constant := 2;
-      CDC_FUNC_DESC_UNION : constant := 6;
+      CDC_FUNC_DESC_UNION                       : constant := 6;
    begin
       Data (F + 0 .. F + 65) :=
         (
@@ -196,7 +196,8 @@ package body USB.Device.Serial is
          Dt_Endpoint'Enum_Rep,
          16#80# or UInt8 (This.Int_EP), -- In EP
          Interrupt'Enum_Rep, -- Interrupt EP
-         Irq_Buffer_Size, 0,
+         Irq_Buffer_Size,
+         0,
          16, -- Polling interval
 
          -- CDC Control Interface --
@@ -215,7 +216,8 @@ package body USB.Device.Serial is
          Dt_Endpoint'Enum_Rep,
          UInt8 (This.Bulk_EP), -- Out EP
          Bulk'Enum_Rep, -- Bulk EP
-         Bulk_Buffer_Size, 0,
+         Bulk_Buffer_Size,
+         0,
          0, -- Polling interval
 
          -- Endpoint Data in --
@@ -223,7 +225,8 @@ package body USB.Device.Serial is
          Dt_Endpoint'Enum_Rep,
          16#80# or UInt8 (This.Bulk_EP), -- In EP
          Bulk'Enum_Rep, -- Bulk EP
-         Bulk_Buffer_Size, 0,
+         Bulk_Buffer_Size,
+         0,
          0
 
         );
@@ -237,20 +240,15 @@ package body USB.Device.Serial is
    function Configure
      (This  : in out Default_Serial_Class;
       UDC   : in out USB_Device_Controller'Class;
-      Index : UInt16)
-      return Setup_Request_Answer
-   is
+      Index : UInt16) return Setup_Request_Answer is
    begin
       USB.Logging.Device.Log_Serial_Config;
 
       if Index = 1 then
 
-         UDC.EP_Setup (EP  => (This.Int_EP, EP_In),
-                       Typ => Interrupt);
-         UDC.EP_Setup (EP  => (This.Bulk_EP, EP_In),
-                       Typ => Bulk);
-         UDC.EP_Setup (EP  => (This.Bulk_EP, EP_Out),
-                       Typ => Bulk);
+         UDC.EP_Setup (EP => (This.Int_EP, EP_In), Typ => Interrupt);
+         UDC.EP_Setup (EP => (This.Bulk_EP, EP_In), Typ => Bulk);
+         UDC.EP_Setup (EP => (This.Bulk_EP, EP_Out), Typ => Bulk);
 
          This.Setup_RX (UDC);
 
@@ -265,24 +263,24 @@ package body USB.Device.Serial is
    -------------------
 
    overriding
-   function Setup_Read_Request (This  : in out Default_Serial_Class;
-                                Req   : Setup_Data;
-                                Buf   : out System.Address;
-                                Len   : out Buffer_Len)
-                                return Setup_Request_Answer
-   is
+   function Setup_Read_Request
+     (This : in out Default_Serial_Class;
+      Req  : Setup_Data;
+      Buf  : out System.Address;
+      Len  : out Buffer_Len) return Setup_Request_Answer is
    begin
       Buf := System.Null_Address;
       Len := 0;
 
       if Req.RType.Typ = Class and then Req.RType.Recipient = Iface then
          case Req.Request is
-         when Get_Line_Coding'Enum_Rep =>
-            Buf := This.Coding'Address;
-            Len := This.Coding'Size / 8;
-            return Handled;
-         when others =>
-            raise Program_Error with "Unknown Serial request";
+            when Get_Line_Coding'Enum_Rep =>
+               Buf := This.Coding'Address;
+               Len := This.Coding'Size / 8;
+               return Handled;
+
+            when others                   =>
+               raise Program_Error with "Unknown Serial request";
          end case;
       end if;
 
@@ -294,35 +292,37 @@ package body USB.Device.Serial is
    -------------------------
 
    overriding
-   function Setup_Write_Request (This  : in out Default_Serial_Class;
-                                 Req   : Setup_Data;
-                                 Data  : UInt8_Array)
-                                 return Setup_Request_Answer
-   is
+   function Setup_Write_Request
+     (This : in out Default_Serial_Class; Req : Setup_Data; Data : UInt8_Array)
+      return Setup_Request_Answer is
    begin
       if Req.RType.Typ = Class and then Req.RType.Recipient = Iface then
          case Req.Request is
-         when Set_Line_Coding'Enum_Rep =>
-            if Data'Length = (This.Coding'Size / 8) then
-               declare
-                  Dst : UInt8_Array (1 .. This.Coding'Size / 8)
-                    with Address => This.Coding'Address;
-               begin
-                  Dst := Data;
-                  return Handled;
-               end;
-            else
-               return Not_Supported;
-            end if;
-         when Set_Control_Line_State'Enum_Rep =>
-            This.State.DTE_Is_Present := (Req.Value and 1) /= 0;
-            This.State.Half_Duplex_Carrier_control := (Req.Value and 2) /= 0;
-            return Handled;
-         when Send_Break'Enum_Rep =>
-            --  TODO: Break are ignored for now...
-            return Handled;
-         when others =>
-            raise Program_Error with "Unknown Serial request";
+            when Set_Line_Coding'Enum_Rep        =>
+               if Data'Length = (This.Coding'Size / 8) then
+                  declare
+                     Dst : UInt8_Array (1 .. This.Coding'Size / 8)
+                     with Address => This.Coding'Address;
+                  begin
+                     Dst := Data;
+                     return Handled;
+                  end;
+               else
+                  return Not_Supported;
+               end if;
+
+            when Set_Control_Line_State'Enum_Rep =>
+               This.State.DTE_Is_Present := (Req.Value and 1) /= 0;
+               This.State.Half_Duplex_Carrier_control :=
+                 (Req.Value and 2) /= 0;
+               return Handled;
+
+            when Send_Break'Enum_Rep             =>
+               --  TODO: Break are ignored for now...
+               return Handled;
+
+            when others                          =>
+               raise Program_Error with "Unknown Serial request";
          end case;
       end if;
 
@@ -334,11 +334,11 @@ package body USB.Device.Serial is
    -----------------------
 
    overriding
-   procedure Transfer_Complete (This : in out Default_Serial_Class;
-                                UDC  : in out USB_Device_Controller'Class;
-                                EP   :        EP_Addr;
-                                CNT  :        Packet_Size)
-   is
+   procedure Transfer_Complete
+     (This : in out Default_Serial_Class;
+      UDC  : in out USB_Device_Controller'Class;
+      EP   : EP_Addr;
+      CNT  : Packet_Size) is
    begin
       if EP = (This.Bulk_EP, EP_Out) then
 
@@ -352,9 +352,10 @@ package body USB.Device.Serial is
 
             if State (WG) = Valid then
 
-               USB.Utils.Copy (Src   => This.Bulk_Out_Buf,
-                               Dst   => Slice (WG).Addr,
-                               Count => CNT);
+               USB.Utils.Copy
+                 (Src   => This.Bulk_Out_Buf,
+                  Dst   => Slice (WG).Addr,
+                  Count => CNT);
 
                Commit (This.RX_Queue, WG, BBqueue.Count (CNT));
             end if;
@@ -378,25 +379,25 @@ package body USB.Device.Serial is
    -- Setup_RX --
    --------------
 
-   procedure Setup_RX (This : in out Default_Serial_Class;
-                       UDC  : in out USB_Device_Controller'Class)
-   is
+   procedure Setup_RX
+     (This : in out Default_Serial_Class;
+      UDC  : in out USB_Device_Controller'Class) is
    begin
       USB.Logging.Device.Log_Serial_Setup_RX;
 
-      UDC.EP_Ready_For_Data (EP      => This.Bulk_EP,
-                             Max_Len => Bulk_Buffer_Size,
-                             Ready   => True);
+      UDC.EP_Ready_For_Data
+        (EP => This.Bulk_EP, Max_Len => Bulk_Buffer_Size, Ready => True);
    end Setup_RX;
 
    --------------
    -- Setup_TX --
    --------------
 
-   procedure Setup_TX (This : in out Default_Serial_Class;
-                       UDC  : in out USB_Device_Controller'Class)
+   procedure Setup_TX
+     (This : in out Default_Serial_Class;
+      UDC  : in out USB_Device_Controller'Class)
    is
-      RG : BBqueue.Buffers.Read_Grant;
+      RG             : BBqueue.Buffers.Read_Grant;
       TX_In_Progress : Boolean;
    begin
 
@@ -412,15 +413,16 @@ package body USB.Device.Serial is
       if State (RG) = Valid then
 
          --  Copy into IN buffer
-         USB.Utils.Copy (Src   => Slice (RG).Addr,
-                         Dst   => This.Bulk_In_Buf,
-                         Count => Natural (Slice (RG).Length));
+         USB.Utils.Copy
+           (Src   => Slice (RG).Addr,
+            Dst   => This.Bulk_In_Buf,
+            Count => Natural (Slice (RG).Length));
 
          USB.Logging.Device.Log_Serial_Write_Packet;
 
          --  Send IN buffer
-         UDC.EP_Send_Packet (Ep  => This.Bulk_EP,
-                             Len => Packet_Size (Slice (RG).Length));
+         UDC.EP_Send_Packet
+           (Ep => This.Bulk_EP, Len => Packet_Size (Slice (RG).Length));
 
          Release (This.TX_Queue, RG);
       else
@@ -432,38 +434,38 @@ package body USB.Device.Serial is
    -- Line_Coding --
    -----------------
 
-   function Line_Coding (This : Default_Serial_Class)
-                         return CDC_Line_Coding
+   function Line_Coding (This : Default_Serial_Class) return CDC_Line_Coding
    is (This.Coding);
 
    ---------------------
    -- List_Ctrl_State --
    ---------------------
 
-   function List_Ctrl_State (This : Default_Serial_Class)
-                             return CDC_Line_Control_State
+   function List_Ctrl_State
+     (This : Default_Serial_Class) return CDC_Line_Control_State
    is (This.State);
 
    --------------------------
    -- Set_Interface_String --
    --------------------------
 
-   procedure Set_Interface_String (This  : in out Default_Serial_Class;
-                                   Stack : in out USB_Device_Stack'Class;
-                                   Str   :        String)
-   is
+   procedure Set_Interface_String
+     (This  : in out Default_Serial_Class;
+      Stack : in out USB_Device_Stack'Class;
+      Str   : String) is
    begin
-      This.Iface_Str := USB.Device.Register_String (Stack,
-                                                    USB.To_USB_String (Str));
+      This.Iface_Str :=
+        USB.Device.Register_String (Stack, USB.To_USB_String (Str));
    end Set_Interface_String;
 
    ----------
    -- Read --
    ----------
 
-   procedure Read (This : in out Default_Serial_Class;
-                   Buf  :        System.Address;
-                   Len  : in out UInt32)
+   procedure Read
+     (This : in out Default_Serial_Class;
+      Buf  : System.Address;
+      Len  : in out UInt32)
    is
       RG : BBqueue.Buffers.Read_Grant;
    begin
@@ -473,9 +475,7 @@ package body USB.Device.Serial is
          USB.Logging.Device.Log_Serial_Receive;
 
          Len := UInt32 (Slice (RG).Length);
-         USB.Utils.Copy (Src   => Slice (RG).Addr,
-                         Dst   => Buf,
-                         Count => Len);
+         USB.Utils.Copy (Src => Slice (RG).Addr, Dst => Buf, Count => Len);
 
          Release (This.RX_Queue, RG);
       else
@@ -487,9 +487,8 @@ package body USB.Device.Serial is
    -- Read --
    ----------
 
-   procedure Read (This : in out Default_Serial_Class;
-                   Str  :    out String;
-                   Len  :    out UInt32)
+   procedure Read
+     (This : in out Default_Serial_Class; Str : out String; Len : out UInt32)
    is
    begin
       Len := Str'Length;
@@ -500,10 +499,11 @@ package body USB.Device.Serial is
    -- Write --
    -----------
 
-   procedure Write (This : in out Default_Serial_Class;
-                    UDC  : in out USB_Device_Controller'Class;
-                    Buf  :        System.Address;
-                    Len  : in out UInt32)
+   procedure Write
+     (This : in out Default_Serial_Class;
+      UDC  : in out USB_Device_Controller'Class;
+      Buf  : System.Address;
+      Len  : in out UInt32)
    is
       WG : BBqueue.Buffers.Write_Grant;
    begin
@@ -515,9 +515,7 @@ package body USB.Device.Serial is
 
          Len := UInt32'Min (Len, UInt32 (Slice (WG).Length));
 
-         USB.Utils.Copy (Src   => Buf,
-                         Dst   => Slice (WG).Addr,
-                         Count => Len);
+         USB.Utils.Copy (Src => Buf, Dst => Slice (WG).Addr, Count => Len);
 
          Commit (This.TX_Queue, WG);
 
@@ -531,11 +529,11 @@ package body USB.Device.Serial is
    -- Write --
    -----------
 
-   procedure Write (This : in out Default_Serial_Class;
-                    UDC  : in out USB_Device_Controller'Class;
-                    Str  :        String;
-                    Len  :    out UInt32)
-   is
+   procedure Write
+     (This : in out Default_Serial_Class;
+      UDC  : in out USB_Device_Controller'Class;
+      Str  : String;
+      Len  : out UInt32) is
    begin
       Len := Str'Length;
 

@@ -28,10 +28,6 @@ package body Packet_Formatting is
       if Packet (Packet'First) /= Start_Of_Frame then
          return False;
       end if;
-      --  Check if payload size is within limits?
-      --  The packet itself doesn't store length, so we assume the whole Packet is the frame.
-      --  If Packet'Length - 2 > Max_Data_Size, is it invalid?
-      --  The user requirement was "variable size amount of data < 254 bytes".
       if Packet'Length - 2 > Max_Data_Size then
          return False;
       end if;
