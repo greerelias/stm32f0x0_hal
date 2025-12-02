@@ -14,17 +14,18 @@ with USB.Device.Serial;
 with STM32.USB_Serialtrace;   use STM32.USB_Serialtrace;
 with Packet_Formatting;       use Packet_Formatting;
 with Protocol;                use Protocol;
-with Commands;
+with Commands;                use Commands;
 with System;                  use System;
 with System.Storage_Elements; use System.Storage_Elements;
 
 package body USB_Demo is
-   Serial        :
+   Serial          :
      aliased USB.Device.Serial.Default_Serial_Class
                (TX_Buffer_Size => 128, RX_Buffer_Size => 128);
-   Stack         : aliased USB.Device.USB_Device_Stack (Max_Classes => 1);
-   UDC           : aliased STM32.USB_Device.UDC;
-   DTE_Connected : Boolean := False;
+   Stack           : aliased USB.Device.USB_Device_Stack (Max_Classes => 1);
+   UDC             : aliased STM32.USB_Device.UDC;
+   DTE_Connected   : Boolean := False;
+   Connection_Test : Boolean := False;
    procedure Run is
    begin
 
@@ -101,33 +102,74 @@ package body USB_Demo is
             Serial.Read (Buffer'Address, Length);
             Stack.Poll;
             if Length > 0 then
-               -- Length = bytes read
-               declare
-                  Decoded_Packet : constant UInt8_Array :=
-                    Protocol.Decode (Buffer (1 .. Integer (Length - 1)));
-               begin
-                  if Decoded_Packet'Length <= Packet'Length then
-                     Packet (1 .. Decoded_Packet'Length) := Decoded_Packet;
-                  end if;
-
-                  if Is_Valid (Decoded_Packet) then
-                     if Get_Command (Decoded_Packet) = Commands.Get_Info then
-                        declare
-                           Encoded   : constant UInt8_Array :=
-                             Encode (Device_Info);
-                           Write_Len : UInt32 := UInt32 (Encoded'Length) + 1;
-                        begin
-                           Reply (1 .. Encoded'Length) := Encoded;
-                           Reply (Encoded'Length + 1) := 0;
-                           Serial.Read (Buffer'Address, Length);
-                           Stack.Poll;
-                           Serial.Write (UDC, Reply'Address, Write_Len);
-                        end;
+               if Connection_Test then
+                  declare
+                     Reply_Length : UInt32 := Length;
+                  begin
+                     if Buffer (Integer (Length)) = 0
+                       and then Buffer (3)
+                                = UInt8 (Data_Packet) --hack fix later
+                     then
+                        Reply := Buffer;
+                        Serial.Read (Buffer'Address, Length);
+                        Stack.Poll;
+                        Serial.Write (UDC, Reply'Address, Reply_Length);
+                     elsif Buffer (3) = UInt8 (End_Test) then
+                        Connection_Test := False;
                      end if;
-                  end if;
-               end;
+                  end;
+               else
+                  -- Length = bytes read
+                  declare
+                     Decoded_Packet : constant UInt8_Array :=
+                       Protocol.Decode (Buffer (1 .. Integer (Length - 1)));
+                  begin
+                     if Decoded_Packet'Length <= Packet'Length then
+                        Packet (1 .. Decoded_Packet'Length) := Decoded_Packet;
+                     end if;
 
-               null;
+                     if Is_Valid (Decoded_Packet) then
+                        case Get_Command (Decoded_Packet) is
+                           when Get_Info        =>
+                              declare
+                                 Encoded   : constant UInt8_Array :=
+                                   Encode (Device_Info);
+                                 Write_Len : UInt32 :=
+                                   UInt32 (Encoded'Length) + 1;
+                              begin
+                                 Reply (1 .. Encoded'Length) := Encoded;
+                                 Reply (Encoded'Length + 1) := 0;
+                                 Serial.Read (Buffer'Address, Length);
+                                 Stack.Poll;
+                                 Serial.Write (UDC, Reply'Address, Write_Len);
+                              end;
+
+                           when Test_Connection =>
+                              declare
+                                 Ready_Packet : constant Uint8_Array :=
+                                   Make_Packet (Ready, (1 .. 0 => 0));
+                                 Encoded      : constant UInt8_Array :=
+                                   Encode (Ready_Packet);
+                                 Write_Len    : UInt32 :=
+                                   UInt32 (Encoded'Length) + 1;
+                              begin
+                                 Reply (1 .. Encoded'Length) := Encoded;
+                                 Reply (Encoded'Length + 1) := 0;
+                                 Serial.Read (Buffer'Address, Length);
+                                 Stack.Poll;
+                                 Serial.Write (UDC, Reply'Address, Write_Len);
+                                 Connection_Test := True;
+                              end;
+
+                           when Data_Packet     =>
+                              null;
+
+                           when others          =>
+                              null;
+                        end case;
+                     end if;
+                  end;
+               end if;
             end if;
          end if;
          -- Led does not turn back on if device crashes
