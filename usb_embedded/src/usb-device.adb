@@ -63,10 +63,9 @@ package body USB.Device is
    -- Get_Status --
    ----------------
 
-   function Get_Status (This : in out USB_Device_Stack;
-                        Req  : Setup_Data)
-                        return Setup_Request_Answer
-   is
+   function Get_Status
+     (This : in out USB_Device_Stack; Req : Setup_Data)
+      return Setup_Request_Answer is
    begin
       if Req.Value = 0 and then Req.Index = 0 and then Req.Length = 2 then
          This.Ctrl.Buffer (1) := 0;  --  Reserved
@@ -83,16 +82,16 @@ package body USB.Device is
    -- Get_String --
    ----------------
 
-   function Get_String (This  : in out USB_Device_Stack;
-                        Index : String_Id)
-                        return Setup_Request_Answer
-   is
+   function Get_String
+     (This : in out USB_Device_Stack; Index : String_Id)
+      return Setup_Request_Answer is
    begin
 
       --  Send string descriptor using internal control buffer
-      pragma Compile_Time_Error (This.Ctrl.Buffer'Length < 256,
-                                 "Internal control buffer too small for " &
-                                   "max string descriptor");
+      pragma
+        Compile_Time_Error
+          (This.Ctrl.Buffer'Length < 256,
+           "Internal control buffer too small for " & "max string descriptor");
 
       if Index = 0 then
          This.Ctrl.Buffer (1) := 4; -- bLength
@@ -112,9 +111,9 @@ package body USB.Device is
 
       declare
          Info : String_Info renames This.String_Indexes (Index);
-         Len : constant Natural := Info.To - Info.From + 1;
-         Dst : String (1 .. Len)
-           with Address => This.Ctrl.Buffer (3)'Address;
+         Len  : constant Natural := Info.To - Info.From + 1;
+         Dst  : String (1 .. Len)
+         with Address => This.Ctrl.Buffer (3)'Address;
       begin
          This.Ctrl.Buffer (1) := UInt8 (Len + 2); -- bLength
          This.Ctrl.Buffer (2) := Dt_String'Enum_Rep;
@@ -130,36 +129,36 @@ package body USB.Device is
    -- Get_Descriptor --
    --------------------
 
-   function Get_Descriptor (This : in out USB_Device_Stack;
-                            Req  : Setup_Data)
-                            return Setup_Request_Answer
+   function Get_Descriptor
+     (This : in out USB_Device_Stack; Req : Setup_Data)
+      return Setup_Request_Answer
    is
       Index     : constant UInt8 := Utils.Low (Req.Value);
       Desc_Type : constant UInt8 := Utils.High (Req.Value);
    begin
 
       case Desc_Type is
-         when Dt_Device'Enum_Rep =>
-            Put_Line ("DT_DEVICE");
+         when Dt_Device'Enum_Rep        =>
+            -- Put_Line ("DT_DEVICE");
             This.Build_Device_Descriptor;
             return Handled;
 
          when Dt_Configuration'Enum_Rep =>
-            Put_Line ("DT_CONFIGURATION");
+            -- Put_Line ("DT_CONFIGURATION");
             This.Build_Config_Descriptor;
             return Handled;
 
-         when Dt_String'Enum_Rep =>
-            Put_Line ("DT_STRING");
+         when Dt_String'Enum_Rep        =>
+            -- Put_Line ("DT_STRING");
             return Get_String (This, String_Id (Index));
 
-         when Dt_Qualifier'Enum_Rep =>
-            Put_Line ("DT_QUALIFIER");
+         when Dt_Qualifier'Enum_Rep     =>
+            -- Put_Line ("DT_QUALIFIER");
             This.Build_Device_Qualifier;
             return Handled;
 
-         when others =>
-            Put_Line ("Descriptor not implemented:" & Desc_Type'Img);
+         when others                    =>
+            -- Put_Line ("Descriptor not implemented:" & Desc_Type'Img);
             return Not_Supported;
       end case;
    end Get_Descriptor;
@@ -168,17 +167,16 @@ package body USB.Device is
    -- Set_Address --
    -----------------
 
-   function Set_Address (This : in out USB_Device_Stack;
-                         Req  : Setup_Data)
-                         return Setup_Request_Answer
-   is
+   function Set_Address
+     (This : in out USB_Device_Stack; Req : Setup_Data)
+      return Setup_Request_Answer is
    begin
       This.Dev_Addr := UInt7 (Req.Value and 16#7F#);
 
-      Put_Line ("Set Address: " & This.Dev_Addr'Img);
+      -- Put_Line ("Set Address: " & This.Dev_Addr'Img);
 
       if This.UDC.Early_Address then
-         Put_Line ("Set early Address: " & This.Dev_Addr'Img);
+         -- Put_Line ("Set early Address: " & This.Dev_Addr'Img);
 
          --  The DWC OTG USB requires the address to be set at this point...
          This.UDC.Set_Address (This.Dev_Addr);
@@ -194,9 +192,9 @@ package body USB.Device is
    -- Set_Configuration --
    -----------------------
 
-   function Set_Configuration (This : in out USB_Device_Stack;
-                               Req  : Setup_Data)
-                               return Setup_Request_Answer
+   function Set_Configuration
+     (This : in out USB_Device_Stack; Req : Setup_Data)
+      return Setup_Request_Answer
    is
       Answer : Setup_Request_Answer := Handled;
    begin
@@ -223,10 +221,9 @@ package body USB.Device is
    -- Register_Class --
    --------------------
 
-   function Register_Class (This  : in out USB_Device_Stack;
-                            Class : not null Any_USB_Device_Class)
-                            return Boolean
-   is
+   function Register_Class
+     (This : in out USB_Device_Stack; Class : not null Any_USB_Device_Class)
+      return Boolean is
    begin
 
       for Class_I of This.Classes loop
@@ -243,11 +240,9 @@ package body USB.Device is
    -- Request_Endpoint --
    ----------------------
 
-   function Request_Endpoint (This : in out USB_Device_Stack;
-                              Typ  :        EP_Type;
-                              EP   : out EP_Id)
-                              return Boolean
-   is
+   function Request_Endpoint
+     (This : in out USB_Device_Stack; Typ : EP_Type; EP : out EP_Id)
+      return Boolean is
    begin
       if This.Initializing = null then
          return False;
@@ -256,8 +251,8 @@ package body USB.Device is
       for Id in EP_Id range 1 .. EP_Id'Last loop
 
          if This.UDC.Valid_EP_Id (Id) -- Check if the EP exists on the UDC
-           and then
-            This.Endpoints (Id).Assigned_To = null -- Check if not already used
+           and then This.Endpoints (Id).Assigned_To
+                    = null -- Check if not already used
          then
             EP := Id;
             This.Endpoints (Id).Assigned_To := This.Initializing;
@@ -272,11 +267,9 @@ package body USB.Device is
    -- Request_Buffer --
    --------------------
 
-   function Request_Buffer (This : in out USB_Device_Stack;
-                            EP   :        EP_Addr;
-                            Len  :        Packet_Size)
-                            return System.Address
-   is
+   function Request_Buffer
+     (This : in out USB_Device_Stack; EP : EP_Addr; Len : Packet_Size)
+      return System.Address is
    begin
       if This.UDC /= null then
          return This.UDC.Request_Buffer (EP, Len);
@@ -289,16 +282,12 @@ package body USB.Device is
    -- Register_String --
    ---------------------
 
-   function Register_String (This : in out USB_Device_Stack;
-                             Str  : USB_String)
-                             return String_Id
-   is
+   function Register_String
+     (This : in out USB_Device_Stack; Str : USB_String) return String_Id is
    begin
       if Str'Length = 0
-        or else
-         This.Last_String_Id = Max_Strings
-        or else
-         (Max_Total_String_Chars - This.Last_String_Index) < Str'Length
+        or else This.Last_String_Id = Max_Strings
+        or else (Max_Total_String_Chars - This.Last_String_Index) < Str'Length
       then
          return Invalid_String_Id;
       end if;
@@ -309,7 +298,7 @@ package body USB.Device is
          From : constant Natural := This.Last_String_Index + 1;
          To   : constant Natural := This.Last_String_Index + Str'Length;
          Dst  : USB_String (1 .. Str'Length)
-           with Address => This.String_Buffer (From)'Address;
+         with Address => This.String_Buffer (From)'Address;
       begin
          Dst := Str;
          This.String_Indexes (This.Last_String_Id).From := From;
@@ -334,15 +323,14 @@ package body USB.Device is
       Max_Packet_Size : Control_Packet_Size;
       Vendor_Id       : UInt16 := 16#6666#;
       Product_Id      : UInt16 := 16#4242#;
-      Bcd_Device      : UInt16 := 16#0121#)
-      return Init_Result
+      Bcd_Device      : UInt16 := 16#0121#) return Init_Result
    is
       use System;
 
       Number_Of_Interfaces : Interface_Id;
-      Unused : Natural;
-      Iface_Id : Interface_Id := 0;
-      Result : Init_Result;
+      Unused               : Natural;
+      Iface_Id             : Interface_Id := 0;
+      Result               : Init_Result;
    begin
 
       This.Max_Packet_Size := Max_Packet_Size;
@@ -351,17 +339,17 @@ package body USB.Device is
 
       --  Control EP buffers
 
-      This.Ctrl.EP_In_Addr := This.UDC.Request_Buffer
-        (Ep  => (0, EP_In),
-         Len => This.Max_Packet_Size);
+      This.Ctrl.EP_In_Addr :=
+        This.UDC.Request_Buffer
+          (Ep => (0, EP_In), Len => This.Max_Packet_Size);
 
       if This.Ctrl.EP_In_Addr = System.Null_Address then
          return Not_Enough_EP_Buffer;
       end if;
 
-      This.Ctrl.EP_Out_Addr := This.UDC.Request_Buffer
-        (Ep  => (0, EP_Out),
-         Len => This.Max_Packet_Size);
+      This.Ctrl.EP_Out_Addr :=
+        This.UDC.Request_Buffer
+          (Ep => (0, EP_Out), Len => This.Max_Packet_Size);
 
       if This.Ctrl.EP_Out_Addr = System.Null_Address then
          return Not_Enough_EP_Buffer;
@@ -396,7 +384,7 @@ package body USB.Device is
 
       This.Initializing := null;
 
-      This.Vendor_Id  := Vendor_Id;
+      This.Vendor_Id := Vendor_Id;
       This.Product_Id := Product_Id;
       This.Bcd_Device := Bcd_Device;
 
@@ -443,12 +431,11 @@ package body USB.Device is
    -- Transfer_Complete --
    -----------------------
 
-   procedure Transfer_Complete (This : in out USB_Device_Stack;
-                                EP   :        EP_Addr;
-                                CNT  :        Packet_Size)
+   procedure Transfer_Complete
+     (This : in out USB_Device_Stack; EP : EP_Addr; CNT : Packet_Size)
    is
-      Assigned_To : Any_USB_Device_Class
-      renames This.Endpoints (EP.Num).Assigned_To;
+      Assigned_To : Any_USB_Device_Class renames
+        This.Endpoints (EP.Num).Assigned_To;
    begin
       if EP = (0, EP_In) then
          USB.Device.Control.Control_In (This);
@@ -468,24 +455,25 @@ package body USB.Device is
 
    procedure Build_Device_Descriptor (This : in out USB_Device_Stack) is
       Desc : Device_Descriptor
-        with Address => This.Ctrl.Buffer'Address;
+      with Address => This.Ctrl.Buffer'Address;
    begin
-      Desc := (bLength            => Desc'Size / 8,
-               bDescriptorType    => Dt_Device'Enum_Rep,
-               bcdUSB             => 16#0110#,
-               bDeviceClass       => 0,
-               bDeviceSubClass    => 0,
-               bDeviceProtocol    => 0,
-               bMaxPacketSize0    => UInt8 (This.Max_Packet_Size),
-               idVendor           => This.Vendor_Id,
-               idProduct          => This.Product_Id,
-               bcdDevice          => This.Bcd_Device,
+      Desc :=
+        (bLength            => Desc'Size / 8,
+         bDescriptorType    => Dt_Device'Enum_Rep,
+         bcdUSB             => 16#0110#,
+         bDeviceClass       => 0,
+         bDeviceSubClass    => 0,
+         bDeviceProtocol    => 0,
+         bMaxPacketSize0    => UInt8 (This.Max_Packet_Size),
+         idVendor           => This.Vendor_Id,
+         idProduct          => This.Product_Id,
+         bcdDevice          => This.Bcd_Device,
 
-               --  String IDs
-               iManufacturer      => This.Manufacturer_Str,
-               iProduct           => This.Product_Str,
-               iSerialNumber      => This.Serial_Str,
-               bNumConfigurations => 1);
+         --  String IDs
+         iManufacturer      => This.Manufacturer_Str,
+         iProduct           => This.Product_Str,
+         iSerialNumber      => This.Serial_Str,
+         bNumConfigurations => 1);
 
       This.Ctrl.Buf := This.Ctrl.Buffer'Address;
       This.Ctrl.Len := Desc'Size / 8;
@@ -497,17 +485,18 @@ package body USB.Device is
 
    procedure Build_Device_Qualifier (This : in out USB_Device_Stack) is
       Desc : Device_Qualifier
-        with Address => This.Ctrl.Buffer'Address;
+      with Address => This.Ctrl.Buffer'Address;
    begin
-      Desc := (bLength            => Desc'Size / 8,
-               bDescriptorType    => Dt_Qualifier'Enum_Rep,
-               bcdUSB             => 16#0200#,
-               bDeviceClass       => 0,
-               bDeviceSubClass    => 0,
-               bDeviceProtocol    => 0,
-               bMaxPacketSize0    => UInt8 (This.Max_Packet_Size),
-               bNumConfigurations => 1,
-               bReserved          => 0);
+      Desc :=
+        (bLength            => Desc'Size / 8,
+         bDescriptorType    => Dt_Qualifier'Enum_Rep,
+         bcdUSB             => 16#0200#,
+         bDeviceClass       => 0,
+         bDeviceSubClass    => 0,
+         bDeviceProtocol    => 0,
+         bMaxPacketSize0    => UInt8 (This.Max_Packet_Size),
+         bNumConfigurations => 1,
+         bReserved          => 0);
 
       This.Ctrl.Buf := This.Ctrl.Buffer'Address;
       This.Ctrl.Len := Desc'Size / 8;
@@ -518,10 +507,10 @@ package body USB.Device is
    -----------------------------
 
    procedure Build_Config_Descriptor (This : in out USB_Device_Stack) is
-      Total_Length : Natural;
-      Len : Natural;
-      First : constant Natural := This.Ctrl.Buffer'First;
-      Number_Of_Interfaces : Interface_Id := 0;
+      Total_Length               : Natural;
+      Len                        : Natural;
+      First                      : constant Natural := This.Ctrl.Buffer'First;
+      Number_Of_Interfaces       : Interface_Id := 0;
       Total_Number_Of_Interfaces : Interface_Id := 0;
    begin
       Total_Length := 9; -- Size of configuration descriptor
@@ -529,17 +518,19 @@ package body USB.Device is
       for Class of This.Classes loop
          exit when Class.Ptr = null;
 
-         Class.Ptr.Get_Class_Info (Number_Of_Interfaces,
-                                   Config_Descriptor_Length => Len);
+         Class.Ptr.Get_Class_Info
+           (Number_Of_Interfaces, Config_Descriptor_Length => Len);
 
          if Total_Length + Len > This.Ctrl.Buffer'Length then
-            raise Program_Error with "Not enought space in control buffer" &
-              " for configuration descriptor";
+            raise Program_Error
+              with
+                "Not enought space in control buffer"
+                & " for configuration descriptor";
          end if;
 
          declare
-            From  : constant Natural := First + Total_Length;
-            To    : constant Natural := From + Len - 1;
+            From : constant Natural := First + Total_Length;
+            To   : constant Natural := From + Len - 1;
          begin
             Class.Ptr.Fill_Config_Descriptor (This.Ctrl.Buffer (From .. To));
          end;
@@ -559,14 +550,15 @@ package body USB.Device is
            UInt8 (Shift_Right (UInt32 (Total_Length) and 16#FF00#, 8));
 
          USB_DESC_TYPE_CONFIGURATION : constant := 2;
-         USB_CFG_MAX_BUS_POWER : constant := 100;
+         USB_CFG_MAX_BUS_POWER       : constant := 100;
 
       begin
          This.Ctrl.Buffer (First .. First + 9 - 1) :=
            (   --  USB configuration descriptor
             9, --  sizeof(usbDescrConfig): length of descriptor in bytes
             USB_DESC_TYPE_CONFIGURATION, --  descriptor type
-            Len_Low, Len_High, --  total length of data returned
+            Len_Low,
+            Len_High, --  total length of data returned
             UInt8 (Total_Number_Of_Interfaces), -- Ifaces in this configuration
             1, --  index of this configuration
             0, --  configuration name string index
@@ -592,22 +584,25 @@ package body USB.Device is
             Evt : constant UDC_Event := This.UDC.Poll;
          begin
 
-            USB.Logging.Device.Log (Evt);
+            -- USB.Logging.Device.Log (Evt);
 
             case Evt.Kind is
-            when Reset =>
-               Put_Line ("Poll: Reset");
-               Reset (This);
-            when Setup_Request =>
-               Put_Line ("Poll: Setup_Request");
-               This.Ctrl.Req := Evt.Req;
-               USB.Device.Control.Setup (This, Evt.Req_EP);
-            when Transfer_Complete =>
-               Put_Line ("Poll: Transfer_Complete");
-               This.Transfer_Complete (Evt.EP, Evt.BCNT);
-            when None =>
-               Put_Line ("Poll: None");
-               return;
+               when Reset             =>
+                  -- Put_Line ("Poll: Reset");
+                  Reset (This);
+
+               when Setup_Request     =>
+                  -- Put_Line ("Poll: Setup_Request");
+                  This.Ctrl.Req := Evt.Req;
+                  USB.Device.Control.Setup (This, Evt.Req_EP);
+
+               when Transfer_Complete =>
+                  -- Put_Line ("Poll: Transfer_Complete");
+                  This.Transfer_Complete (Evt.EP, Evt.BCNT);
+
+               when None              =>
+                  -- Put_Line ("Poll: None");
+                  return;
             end case;
          end;
       end loop;
@@ -617,8 +612,8 @@ package body USB.Device is
    -- Controller --
    ----------------
 
-   function Controller (This : USB_Device_Stack)
-                        return not null Any_USB_Device_Controller
+   function Controller
+     (This : USB_Device_Stack) return not null Any_USB_Device_Controller
    is (This.UDC);
 
 end USB.Device;
