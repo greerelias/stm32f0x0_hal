@@ -879,11 +879,5 @@ package body STM32.USB_Device is
       return This.Irq;
    end Irq_Pending;
 
-   procedure USB_ISR_Handler (This : in out UDC) is
-   begin
-      This.Irq := True;
-   --  Clear_Pending (31);
-   end USB_ISR_Handler;
-
 
 end STM32.USB_Device;

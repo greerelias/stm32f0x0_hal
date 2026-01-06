@@ -11,6 +11,7 @@ with STM32_SVD.RCC;         use STM32_SVD.RCC;
 with USB.Device;            use USB.Device;
 with USB.Device.Serial;
 with STM32.USB_Serialtrace; use STM32.USB_Serialtrace;
+with Cortex_M.NVIC;         use Cortex_M.NVIC;
 
 package body USB_Demo is
    Serial        :
@@ -87,40 +88,48 @@ package body USB_Demo is
 
       Stack.Start;
 
+      Enable_Interrupt (31);
       loop
-         Stack.Poll;
+         --  Stack.Poll;
          STM32.GPIO.Clear (STM32.Device.PA5);
-         if Serial.List_Ctrl_State.DTE_Is_Present then
-            if not DTE_Connected then
-               STM32.Device.Delay_Cycles (1000);
-               -- Seems like we have to do a read before writing
-               Serial.Read (Buffer (Integer (Count) .. 128), Length);
-               Stack.Poll;
-               Serial.Write (UDC, Greeting, Length);
-               DTE_Connected := True;
-            end if;
-            -- Reads characters from host serial port.
-            -- GTKTerm sends a character as soon as it is typed so this reads one
-            -- character at time.
-            Serial.Read (Buffer (Integer (Count) .. 128), Length);
-            if Length > 0 then
-               -- Length = bytes read
-               if Buffer (Integer (Count)) = CR then
-                  -- If enter is pressed print buffer to host
-                  Serial.Write (UDC, Reply, Length);
-                  Serial.Write (UDC, Buffer (1 .. Integer (Count)), Length);
-                  Serial.Write (UDC, New_Line, Length);
-                  Count := 1;
-               else
-                  -- Echo characters typed back to host
-                  Serial.Write
-                    (UDC, Buffer (Integer (Count) .. Integer (Count)), Length);
-                  Count := Count + 1;
-               end if;
-            end if;
-         end if;
-         -- Led does not turn back on if device crashes
+
+         --  -- Led does not turn back on if device crashes
          STM32.GPIO.Set (STM32.Device.PA5);
       end loop;
    end Run;
+   procedure USB_ISR_Handler is
+   begin
+      Stack.Poll;
+      if Serial.List_Ctrl_State.DTE_Is_Present then
+         if not DTE_Connected then
+            STM32.Device.Delay_Cycles (1000);
+            -- Seems like we have to do a read before writing
+            Serial.Read (Buffer (Integer (Count) .. 128), Length);
+            Stack.Poll;
+            Serial.Write (UDC, Greeting, Length);
+            DTE_Connected := True;
+         end if;
+         -- Reads characters from host serial port.
+         -- GTKTerm sends a character as soon as it is typed so this reads one
+         -- character at time.
+         Serial.Read (Buffer (Integer (Count) .. 128), Length);
+         if Length > 0 then
+            -- Length = bytes read
+            if Buffer (Integer (Count)) = CR then
+               -- If enter is pressed print buffer to host
+               Serial.Write (UDC, Reply, Length);
+               Serial.Write (UDC, Buffer (1 .. Integer (Count)), Length);
+               Serial.Write (UDC, New_Line, Length);
+               Count := 1;
+            else
+               -- Echo characters typed back to host
+               Serial.Write
+                 (UDC, Buffer (Integer (Count) .. Integer (Count)), Length);
+               Count := Count + 1;
+            end if;
+         end if;
+      end if;
+   end USB_ISR_Handler;
+
+
 end Usb_Demo;

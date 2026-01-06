@@ -19,4 +19,6 @@ package USB_Demo is
    pragma
      Export (Convention => C, Entity => Length, External_Name => "rw_length");
    procedure Run;
+   procedure USB_ISR_Handler
+   with Export, Convention => C, External_Name => "__usb_handler";
 end USB_Demo;

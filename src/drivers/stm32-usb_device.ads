@@ -84,8 +84,7 @@ package STM32.USB_Device is
 
    function Irq_Pending (This : UDC) return Boolean;
 
-   procedure USB_ISR_Handler (This : in out UDC)
-   with Export, Convention => C, External_Name => "__usb_handler";
+
 private
    Packet_Buffer_Base : constant System.Address :=
      System'To_Address (16#4000_6000#);
