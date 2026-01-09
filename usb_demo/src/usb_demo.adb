@@ -8,6 +8,7 @@ with STM32.GPIO;              use STM32.GPIO;
 with STM32.RCC;               use STM32.RCC;
 with STM32.USB_Device;
 with STM32_SVD.Flash;
+with STM32_SVD.GPIO;
 with STM32_SVD.RCC;           use STM32_SVD.RCC;
 with USB.Device;              use USB.Device;
 with USB.Device.Serial;
@@ -19,6 +20,8 @@ with System;                  use System;
 with System.Storage_Elements; use System.Storage_Elements;
 with STM32.USB_Serialtrace;   use STM32.USB_Serialtrace;
 with Cortex_M.NVIC;           use Cortex_M.NVIC;
+with STM32.EXTI;              use STM32.EXTI;
+with STM32.SYSCFG;            use STM32.SYSCFG;
 
 package body USB_Demo is
    Serial          :
@@ -52,16 +55,27 @@ package body USB_Demo is
 
       -- Enable GPIOF clock (For external osc, not sure if needed)
       STM32.Device.Enable_Clock (STM32.Device.GPIO_F);
-      -- Enable GPIOA clock
+      -- Enable GPIOA clock (For led - PA5)
       STM32.Device.Enable_Clock (STM32.Device.GPIO_A);
+      -- Enable GPIOC clock (For bser button B1(Blue) - PC13)
+      STM32.Device.Enable_Clock (STM32.Device.GPIO_C);
 
       -- Setup MCO pin to check clock output
+      -- TODO: remove MCO stuff was just for testing
       RCC_Periph.CFGR.PLLNODIV := True;
       RCC_Periph.CFGR.MCOPRE := 2#000#;
       RCC_Periph.CFGR.MCO := 2#0111#;
       while not RCC_Periph.CFGR.PLLNODIV loop
          null;
       end loop;
+
+      -- Enable interrupt for button B1
+      Connect_External_Interrupt (STM32.Device.PC13);
+      Enable_External_Interrupt (EXTI_Line_13, Interrupt_Falling_Edge);
+
+      Configure_IO
+        (STM32.Device.PC13,
+         Config => (Mode => Mode_In, Resistors => Floating));
       Configure_IO
         (STM32.Device.PA5,
          Config =>
@@ -96,10 +110,11 @@ package body USB_Demo is
 
       Stack.Start;
 
-      Enable_Interrupt (31);
+      --  Enable_Interrupt (31);
+      Enable_Interrupt (7);
       loop
-         STM32.GPIO.Set (STM32.Device.PA5);
-         STM32.GPIO.Clear (STM32.Device.PA5);
+         null;
+         --  STM32.GPIO.Set (STM32.Device.PA5);
       end loop;
    end Run;
    procedure USB_ISR_Handler is
@@ -115,7 +130,9 @@ package body USB_Demo is
                   Reply_Length : UInt32 := Length;
                begin
                   if Buffer (Integer (Length)) = 0
-                    and then Buffer (3) = UInt8 (Data_Packet) --hack fix later
+                    and then Buffer (3)
+                             = UInt8 (Data_Packet --hack fix later
+                                 )
                   then
                      Reply := Buffer;
                      Serial.Read (Buffer'Address, Length);
@@ -179,8 +196,16 @@ package body USB_Demo is
             end if;
          end if;
       end if;
-   -- Led does not turn back on if device crashes
    end USB_ISR_Handler;
+
+   -- ISR user button B1(Blue)
+   procedure EXTI4_15_Handler is
+   begin
+      if External_Interrupt_Pending (EXTI_Line_13) then
+         STM32.GPIO.Toggle (STM32.Device.PA5);
+         Clear_External_Interrupt (EXTI_Line_13);
+      end if;
+   end EXTI4_15_Handler;
 
 
 end Usb_Demo;
