@@ -1,25 +1,33 @@
 --  with USB.Device.Serial; use USB.Device.Serial;
 --  with STM32.USB_Device;  use STM32.USB_Device;
 pragma Extensions_Allowed (On);
+with HAL;                     use HAL;
 with HAL.GPIO;
 with STM32.Device;
-with STM32.GPIO;            use STM32.GPIO;
-with STM32.RCC;             use STM32.RCC;
+with STM32.GPIO;              use STM32.GPIO;
+with STM32.RCC;               use STM32.RCC;
 with STM32.USB_Device;
 with STM32_SVD.Flash;
-with STM32_SVD.RCC;         use STM32_SVD.RCC;
-with USB.Device;            use USB.Device;
+with STM32_SVD.RCC;           use STM32_SVD.RCC;
+with USB.Device;              use USB.Device;
 with USB.Device.Serial;
-with STM32.USB_Serialtrace; use STM32.USB_Serialtrace;
-with Cortex_M.NVIC;         use Cortex_M.NVIC;
+with STM32.USB_Serialtrace;   use STM32.USB_Serialtrace;
+with Packet_Formatting;       use Packet_Formatting;
+with Protocol;                use Protocol;
+with Commands;                use Commands;
+with System;                  use System;
+with System.Storage_Elements; use System.Storage_Elements;
+with STM32.USB_Serialtrace;   use STM32.USB_Serialtrace;
+with Cortex_M.NVIC;           use Cortex_M.NVIC;
 
 package body USB_Demo is
-   Serial        :
+   Serial          :
      aliased USB.Device.Serial.Default_Serial_Class
                (TX_Buffer_Size => 128, RX_Buffer_Size => 128);
-   Stack         : aliased USB.Device.USB_Device_Stack (Max_Classes => 1);
-   UDC           : aliased STM32.USB_Device.UDC;
-   DTE_Connected : Boolean := False;
+   Stack           : aliased USB.Device.USB_Device_Stack (Max_Classes => 1);
+   UDC             : aliased STM32.USB_Device.UDC;
+   DTE_Connected   : Boolean := False;
+   Connection_Test : Boolean := False;
    procedure Run is
    begin
 
@@ -92,8 +100,82 @@ package body USB_Demo is
       loop
          --  Stack.Poll;
          STM32.GPIO.Clear (STM32.Device.PA5);
+         if Serial.List_Ctrl_State.DTE_Is_Present then
+            Length := Buffer'Length;
+            Serial.Read (Buffer'Address, Length);
+            Stack.Poll;
+            if Length > 0 then
+               if Connection_Test then
+                  declare
+                     Reply_Length : UInt32 := Length;
+                  begin
+                     if Buffer (Integer (Length)) = 0
+                       and then Buffer (3)
+                                = UInt8 (Data_Packet) --hack fix later
+                     then
+                        Reply := Buffer;
+                        Serial.Read (Buffer'Address, Length);
+                        Stack.Poll;
+                        Serial.Write (UDC, Reply'Address, Reply_Length);
+                     elsif Buffer (3) = UInt8 (End_Test) then
+                        Connection_Test := False;
+                     end if;
+                  end;
+               else
+                  -- Length = bytes read
+                  declare
+                     Decoded_Packet : constant UInt8_Array :=
+                       Protocol.Decode (Buffer (1 .. Integer (Length - 1)));
+                  begin
+                     if Decoded_Packet'Length <= Packet'Length then
+                        Packet (1 .. Decoded_Packet'Length) := Decoded_Packet;
+                     end if;
 
-         --  -- Led does not turn back on if device crashes
+                     if Is_Valid (Decoded_Packet) then
+                        case Get_Command (Decoded_Packet) is
+                           when Get_Info        =>
+                              declare
+                                 Encoded   : constant UInt8_Array :=
+                                   Encode (Device_Info);
+                                 Write_Len : UInt32 :=
+                                   UInt32 (Encoded'Length) + 1;
+                              begin
+                                 Reply (1 .. Encoded'Length) := Encoded;
+                                 Reply (Encoded'Length + 1) := 0;
+                                 Serial.Read (Buffer'Address, Length);
+                                 Stack.Poll;
+                                 Serial.Write (UDC, Reply'Address, Write_Len);
+                              end;
+
+                           when Test_Connection =>
+                              declare
+                                 Ready_Packet : constant Uint8_Array :=
+                                   Make_Packet (Ready, (1 .. 0 => 0));
+                                 Encoded      : constant UInt8_Array :=
+                                   Encode (Ready_Packet);
+                                 Write_Len    : UInt32 :=
+                                   UInt32 (Encoded'Length) + 1;
+                              begin
+                                 Reply (1 .. Encoded'Length) := Encoded;
+                                 Reply (Encoded'Length + 1) := 0;
+                                 Serial.Read (Buffer'Address, Length);
+                                 Stack.Poll;
+                                 Serial.Write (UDC, Reply'Address, Write_Len);
+                                 Connection_Test := True;
+                              end;
+
+                           when Data_Packet     =>
+                              null;
+
+                           when others          =>
+                              null;
+                        end case;
+                     end if;
+                  end;
+               end if;
+            end if;
+         end if;
+         -- Led does not turn back on if device crashes
          STM32.GPIO.Set (STM32.Device.PA5);
       end loop;
    end Run;
