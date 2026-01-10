@@ -6,6 +6,7 @@ with HAL.GPIO;
 with STM32.Device;
 with STM32.GPIO;              use STM32.GPIO;
 with STM32.RCC;               use STM32.RCC;
+with STM32.SysTick;
 with STM32.USB_Device;
 with STM32_SVD.Flash;
 with STM32_SVD.GPIO;
@@ -22,6 +23,7 @@ with STM32.USB_Serialtrace;   use STM32.USB_Serialtrace;
 with Cortex_M.NVIC;           use Cortex_M.NVIC;
 with STM32.EXTI;              use STM32.EXTI;
 with STM32.SYSCFG;            use STM32.SYSCFG;
+with STM32.SysTick;
 
 package body USB_Demo is
    Serial          :
@@ -31,6 +33,9 @@ package body USB_Demo is
    UDC             : aliased STM32.USB_Device.UDC;
    DTE_Connected   : Boolean := False;
    Connection_Test : Boolean := False;
+
+   package SysTick renames STM32.SysTick;
+
    procedure Run is
    begin
 
@@ -72,6 +77,12 @@ package body USB_Demo is
       -- Enable interrupt for button B1
       Connect_External_Interrupt (STM32.Device.PC13);
       Enable_External_Interrupt (EXTI_Line_13, Interrupt_Falling_Edge);
+
+      SysTick.Configure
+        (Source             => SysTick.Hclk_DIV8,
+         Generate_Interrupt => True,
+         Reload_Value       => 6000);
+      SysTick.Enable;
 
       Configure_IO
         (STM32.Device.PC13,
@@ -208,4 +219,8 @@ package body USB_Demo is
    end EXTI4_15_Handler;
 
 
+   procedure SysTick_Handler is
+   begin
+      STM32.SysTick.Increment_Tick;
+   end SysTick_Handler;
 end Usb_Demo;

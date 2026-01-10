@@ -1,3 +1,5 @@
+with Cortex_M.NVIC; use Cortex_M.NVIC;
+
 package body STM32.SysTick is
 
    procedure Configure
@@ -14,12 +16,24 @@ package body STM32.SysTick is
          Reload_Value       => Reload_Value);
    end Configure;
 
+   procedure Enable is
+   begin
+      Enable_Interrupt (SysTick_Interrupt);
+      Cortex_M.Systick.Enable;
+   end Enable;
+
+   procedure Disable is
+   begin
+      Disable_Interrupt (SysTick_Interrupt);
+      Cortex_M.Systick.Disable;
+   end Disable;
+
    procedure Increment_Tick is
    begin
       Tick := Tick + 1;
    end Increment_Tick;
 
-   function Get_Tick is
+   function Get_Tick return UInt32 is
    begin
       return Tick;
    end Get_Tick;
