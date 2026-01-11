@@ -24,6 +24,7 @@ with Cortex_M.NVIC;           use Cortex_M.NVIC;
 with STM32.EXTI;              use STM32.EXTI;
 with STM32.SYSCFG;            use STM32.SYSCFG;
 with STM32.SysTick;
+with STM32.Timers;
 
 package body USB_Demo is
    Serial          :
@@ -34,7 +35,10 @@ package body USB_Demo is
    DTE_Connected   : Boolean := False;
    Connection_Test : Boolean := False;
 
+   Timer_3 : STM32.Timers.Timer
+   with Address => STM32_SVD.TIM3_Base;
    package SysTick renames STM32.SysTick;
+   package Timers renames STM32.Timers;
 
    procedure Run is
    begin
@@ -64,6 +68,8 @@ package body USB_Demo is
       STM32.Device.Enable_Clock (STM32.Device.GPIO_A);
       -- Enable GPIOC clock (For bser button B1(Blue) - PC13)
       STM32.Device.Enable_Clock (STM32.Device.GPIO_C);
+      -- Enable Timer 3 clock
+      STM32.Device.Enable_Clock (Timer_3);
 
       -- Setup MCO pin to check clock output
       -- TODO: remove MCO stuff was just for testing
@@ -96,6 +102,15 @@ package body USB_Demo is
             Speed       => Speed_High));
 
       Configure_IO
+        (STM32.Device.PA6,
+         Config =>
+           (Mode           => Mode_AF,
+            Resistors      => Floating,
+            AF_Output_Type => Push_Pull,
+            AF_Speed       => Speed_High,
+            AF             => STM32.Device.GPIO_AF_TIM3_1));
+
+      Configure_IO
         (STM32.Device.PA8,
          Config =>
            (Mode           => Mode_AF,
@@ -103,6 +118,20 @@ package body USB_Demo is
             AF_Output_Type => Push_Pull,
             AF_Speed       => Speed_High,
             AF             => STM32.Device.GPIO_AF_MCO_0));
+
+      Timer_3.Configure
+        (Prescaler     => 0,
+         Period        => 7,
+         Clock_Divisor => Timers.Div1,
+         Counter_Mode  => Timers.Up);
+      Timer_3.Select_Internal_Clock;
+      Timer_3.Configure_Channel_Output
+        (Channel  => Timers.Channel_1,
+         Mode     => Timers.PWM1,
+         State    => Timers.Enable,
+         Pulse    => 3,
+         Polarity => Timers.High);
+      Timer_3.Enable;
 
       -- Setup USB stack
       if not Stack.Register_Class (Serial'Access) then

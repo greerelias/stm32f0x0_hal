@@ -178,7 +178,7 @@ package STM32.Device is
    GPIO_AF_SWJ_0      : constant GPIO_Alternate_Function;
    GPIO_AF_TRACE_0    : constant GPIO_Alternate_Function;
    GPIO_AF_TIM1_1     : constant GPIO_Alternate_Function;
-   GPIO_AF_TIM2_1     : constant GPIO_Alternate_Function;
+   GPIO_AF_TIM3_1     : constant GPIO_Alternate_Function;
 
    GPIO_AF_TIM3_2  : constant GPIO_Alternate_Function;
    GPIO_AF_TIM4_2  : constant GPIO_Alternate_Function;
@@ -287,7 +287,7 @@ private
    GPIO_AF_SWJ_0      : constant GPIO_Alternate_Function := 0;
    GPIO_AF_TRACE_0    : constant GPIO_Alternate_Function := 0;
    GPIO_AF_TIM1_1     : constant GPIO_Alternate_Function := 1;
-   GPIO_AF_TIM2_1     : constant GPIO_Alternate_Function := 1;
+   GPIO_AF_TIM3_1     : constant GPIO_Alternate_Function := 1;
 
    GPIO_AF_TIM3_2 : constant GPIO_Alternate_Function := 2;
    GPIO_AF_TIM4_2 : constant GPIO_Alternate_Function := 2;
